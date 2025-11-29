@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutre Meals - National Coverage Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff; }
+        
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 25px 30px;
+        }
+        .header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+        .header .subtitle { font-size: 15px; opacity: 0.9; }
+        
+        .stats-banner {
+            background: #1a1a1a;
+            padding: 20px 30px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .container { display: flex; height: calc(100vh - 180px); }
+        #map { flex: 1; height: 100%; position: relative; }
+
+        .zoom-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(26, 26, 26, 0.95);
+            padding: 10px 15px;
+            border-radius: 6px;
+            z-index: 1000;
+            font-size: 12px;
+            border: 1px solid #333;
+        }
+        .zoom-level {
+            color: #10b981;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .view-mode {
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        /* Filter Controls */
+        .filter-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(26, 26, 26, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 1000;
+            min-width: 280px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid #333;
+        }
+
+        .filter-panel h4 {
+            color: #10b981;
+            font-size: 13px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+
+        .filter-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .filter-label {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-bottom: 6px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 8px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 12px;
+            color: #e5e7eb;
+        }
+
+        .filter-checkbox input[type="checkbox"] {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .filter-button {
+            width: 100%;
+            padding: 8px;
+            background: #10b981;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+        }
+
+        .filter-button:hover {
+            background: #059669;
+        }
+
+        .filter-button.secondary {
+            background: #374151;
+        }
+
+        .filter-button.secondary:hover {
+            background: #4b5563;
+        }
+
+        .filter-stats {
+            font-size: 11px;
+            color: #10b981;
+            margin-top: 8px;
+            padding: 8px;
+            background: #1f2937;
+            border-radius: 4px;
+        }
+
+        .toggle-filters {
+            position: absolute;
+            top: 70px;
+            left: 10px;
+            background: #10b981;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .toggle-filters:hover {
+            background: #059669;
+        }
+
+        .filter-panel.collapsed {
+            display: none;
+        }
+
+        /* Search Box */
+        .search-box {
+            position: absolute;
+            top: 10px;
+            right: 320px;
+            background: rgba(26, 26, 26, 0.95);
+            padding: 12px;
+            border-radius: 8px;
+            z-index: 1000;
+            min-width: 300px;
+            border: 1px solid #333;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+
+        .search-input::placeholder {
+            color: #6b7280;
+        }
+
+        .search-results {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #1f2937;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+
+        .search-result-item {
+            padding: 10px;
+            border-bottom: 1px solid #374151;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .search-result-item:hover {
+            background: #374151;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-name {
+            color: #e5e7eb;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .search-result-details {
+            color: #9ca3af;
+            font-size: 11px;
+        }
+
+        .search-result-revenue {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .search-no-results {
+            padding: 15px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .search-hint {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        /* Heat Map Toggle */
+        .heatmap-toggle {
+            position: absolute;
+            bottom: 40px;
+            left: 10px;
+            background: rgba(26, 26, 26, 0.95);
+            padding: 12px 15px;
+            border-radius: 8px;
+            z-index: 1000;
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .heatmap-toggle label {
+            font-size: 12px;
+            color: #e5e7eb;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .heatmap-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .heatmap-legend {
+            position: absolute;
+            bottom: 90px;
+            left: 10px;
+            background: rgba(26, 26, 26, 0.95);
+            padding: 12px;
+            border-radius: 8px;
+            z-index: 1000;
+            border: 1px solid #333;
+            display: none;
+        }
+
+        .heatmap-legend.active {
+            display: block;
+        }
+
+        .heatmap-legend h5 {
+            font-size: 11px;
+            color: #10b981;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .legend-gradient {
+            height: 20px;
+            width: 200px;
+            background: linear-gradient(to right,
+                rgba(0, 0, 255, 0.4),
+                rgba(0, 255, 255, 0.5),
+                rgba(0, 255, 0, 0.6),
+                rgba(255, 255, 0, 0.7),
+                rgba(255, 0, 0, 0.8));
+            border-radius: 4px;
+            margin-bottom: 6px;
+        }
+
+        .legend-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #9ca3af;
+        }
+
+        /* Time Controls */
+        .time-controls {
+            position: absolute;
+            bottom: 40px;
+            right: 400px;
+            background: rgba(26, 26, 26, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 1000;
+            min-width: 350px;
+            border: 1px solid #333;
+            display: none;
+        }
+
+        .time-controls.active {
+            display: block;
+        }
+
+        .time-controls h5 {
+            font-size: 12px;
+            color: #10b981;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .time-slider-container {
+            margin-bottom: 15px;
+        }
+
+        .time-slider {
+            width: 100%;
+            height: 6px;
+            background: #374151;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .time-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #10b981;
+            cursor: pointer;
+        }
+
+        .time-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #10b981;
+            cursor: pointer;
+            border: none;
+        }
+
+        .month-label {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 10px;
+        }
+
+        .time-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .time-stat {
+            background: #1f2937;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .time-stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .time-stat-label {
+            font-size: 10px;
+            color: #9ca3af;
+            text-transform: uppercase;
+        }
+
+        .time-stat-change {
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
+        .time-stat-change.positive {
+            color: #10b981;
+        }
+
+        .time-stat-change.negative {
+            color: #ef4444;
+        }
+
+        .time-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .time-button {
+            flex: 1;
+            padding: 8px;
+            background: #374151;
+            border: none;
+            border-radius: 4px;
+            color: #e5e7eb;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .time-button:hover {
+            background: #4b5563;
+        }
+
+        .time-button.primary {
+            background: #10b981;
+        }
+
+        .time-button.primary:hover {
+            background: #059669;
+        }
+
+        .toggle-time {
+            position: absolute;
+            bottom: 40px;
+            right: 400px;
+            background: #10b981;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .toggle-time:hover {
+            background: #059669;
+        }
+
+        .sidebar {
+            width: 380px;
+            background: #1a1a1a;
+            padding: 25px;
+            overflow-y: auto;
+            border-left: 1px solid #333;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section h3 {
+            font-size: 14px;
+            color: #10b981;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        
+        .market-tier {
+            background: #252525;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid;
+        }
+        
+        .tier-core { border-color: #10b981; }
+        .tier-growth { border-color: #3b82f6; }
+        .tier-emerging { border-color: #f59e0b; }
+        .tier-test { border-color: #6b7280; }
+        
+        .tier-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .tier-name {
+            font-size: 13px;
+            font-weight: 700;
+        }
+        
+        .tier-count {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+        
+        .tier-stats {
+            font-size: 12px;
+            color: #d1d5db;
+            line-height: 1.6;
+        }
+        
+        .state-list {
+            background: #1f2937;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .state-list h4 {
+            font-size: 12px;
+            color: #10b981;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .state-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 12px;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .state-row:last-child { border-bottom: none; }
+        
+        .state-name { color: #e5e7eb; }
+        .state-revenue { color: #10b981; font-weight: 600; }
+        
+        /* Popup Styles */
+        .leaflet-popup-content-wrapper { background: #1a1a1a; color: #fff; border-radius: 8px; }
+        .leaflet-popup-content { margin: 15px; font-size: 13px; min-width: 280px; }
+        .leaflet-popup-tip { background: #1a1a1a; }
+        
+        .popup-header {
+            padding-bottom: 12px;
+            border-bottom: 2px solid #10b981;
+            margin-bottom: 12px;
+        }
+        
+        .popup-state { font-size: 20px; font-weight: 700; color: #10b981; }
+        .popup-tier { font-size: 11px; color: #9ca3af; text-transform: uppercase; margin-top: 4px; }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 12px 0;
+        }
+        
+        .metric-box {
+            background: #252525;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .metric-label {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        
+        .metric-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* Cluster styling */
+        .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
+            background-color: rgba(16, 185, 129, 0.6) !important;
+        }
+        .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
+            background-color: rgba(16, 185, 129, 0.8) !important;
+            color: #fff !important;
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .stats-banner { grid-template-columns: repeat(2, 1fr); }
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; height: 400px; border-left: none; border-top: 1px solid #333; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🗺️ Nutre Meals - National Coverage</h1>
+        <div class="subtitle">29 States • $20.9M YTD Revenue • 12,181 Customers</div>
+    </div>
+    
+    <div class="stats-banner">
+        <div class="stat-item">
+            <div class="stat-value">$20.9M</div>
+            <div class="stat-label">Total Revenue</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">185,924</div>
+            <div class="stat-label">Total Orders</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">12,181</div>
+            <div class="stat-label">Customers</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">$110.78</div>
+            <div class="stat-label">Average AOV</div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div id="map">
+            <div class="zoom-indicator">
+                <div class="zoom-level">Zoom: <span id="zoom-value">5</span></div>
+                <div class="view-mode" id="view-mode">State View</div>
+            </div>
+
+            <div class="search-box">
+                <input type="text"
+                       class="search-input"
+                       id="searchInput"
+                       placeholder="🔍 Search by zip code or city..."
+                       oninput="handleSearch(this.value)">
+                <div class="search-hint">Try: "Boston", "02127", "Danvers"</div>
+                <div class="search-results" id="searchResults"></div>
+            </div>
+
+            <button class="toggle-filters" onclick="toggleFilters()">
+                <span id="filter-toggle-text">Hide Filters</span>
+            </button>
+
+            <div class="heatmap-toggle">
+                <label>
+                    <input type="checkbox" id="heatmapCheckbox" class="heatmap-checkbox" onchange="toggleHeatMap(this.checked)">
+                    🔥 Heat Map View
+                </label>
+            </div>
+
+            <div class="heatmap-legend" id="heatmapLegend">
+                <h5>Revenue Density</h5>
+                <div class="legend-gradient"></div>
+                <div class="legend-labels">
+                    <span>Low</span>
+                    <span>Medium</span>
+                    <span>High</span>
+                </div>
+            </div>
+
+            <button class="toggle-time" onclick="toggleTimeControls()">
+                📅 Time Analysis
+            </button>
+
+            <div class="time-controls" id="timeControls">
+                <h5>⏱️ Month-Over-Month Analysis</h5>
+
+                <div class="month-label" id="monthLabel">January 2025</div>
+
+                <div class="time-slider-container">
+                    <input type="range" class="time-slider" id="timeSlider"
+                           min="0" max="10" value="10" step="1"
+                           oninput="updateTimeView(this.value)">
+                </div>
+
+                <div class="time-stats">
+                    <div class="time-stat">
+                        <div class="time-stat-value" id="timeRevenue">$0</div>
+                        <div class="time-stat-label">Revenue</div>
+                        <div class="time-stat-change" id="timeRevenueChange"></div>
+                    </div>
+                    <div class="time-stat">
+                        <div class="time-stat-value" id="timeOrders">0</div>
+                        <div class="time-stat-label">Orders</div>
+                        <div class="time-stat-change" id="timeOrdersChange"></div>
+                    </div>
+                    <div class="time-stat">
+                        <div class="time-stat-value" id="timeLocations">0</div>
+                        <div class="time-stat-label">Locations</div>
+                        <div class="time-stat-change" id="timeLocationsChange"></div>
+                    </div>
+                    <div class="time-stat">
+                        <div class="time-stat-value" id="timeAOV">$0</div>
+                        <div class="time-stat-label">Avg AOV</div>
+                        <div class="time-stat-change" id="timeAOVChange"></div>
+                    </div>
+                </div>
+
+                <div class="time-buttons">
+                    <button class="time-button" onclick="animateTime()">▶ Play Animation</button>
+                    <button class="time-button" onclick="stopAnimation()">⏸ Stop</button>
+                    <button class="time-button primary" onclick="resetToCurrentMonth()">📍 Current</button>
+                </div>
+            </div>
+
+            <div class="filter-panel" id="filterPanel">
+                <h4>🔍 Filters</h4>
+
+                <!-- Revenue Filter -->
+                <div class="filter-section">
+                    <label class="filter-label">Minimum Revenue</label>
+                    <input type="range" id="revenueSlider" class="filter-input"
+                           min="0" max="500000" value="0" step="10000"
+                           oninput="updateRevenueLabel(this.value)">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af; margin-top: 4px;">
+                        <span>$0</span>
+                        <span id="revenueLabel" style="color: #10b981; font-weight: 600;">$0</span>
+                        <span>$500K+</span>
+                    </div>
+                </div>
+
+                <!-- State Filter -->
+                <div class="filter-section">
+                    <label class="filter-label">States</label>
+                    <div style="max-height: 200px; overflow-y: auto; background: #1f2937; padding: 8px; border-radius: 4px;">
+                        <div class="filter-checkbox">
+                            <input type="checkbox" id="stateAll" checked onchange="toggleAllStates(this.checked)">
+                            <label for="stateAll" style="font-weight: 600;">All States</label>
+                        </div>
+                        <div id="stateCheckboxes"></div>
+                    </div>
+                </div>
+
+                <!-- Market Tier Filter -->
+                <div class="filter-section">
+                    <label class="filter-label">Market Tiers</label>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="tierCore" checked>
+                        <label for="tierCore">
+                            <span style="color: #10b981;">●</span> Core Markets
+                        </label>
+                    </div>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="tierGrowth" checked>
+                        <label for="tierGrowth">
+                            <span style="color: #3b82f6;">●</span> Growth Markets
+                        </label>
+                    </div>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="tierEmerging" checked>
+                        <label for="tierEmerging">
+                            <span style="color: #f59e0b;">●</span> Emerging Markets
+                        </label>
+                    </div>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="tierTest" checked>
+                        <label for="tierTest">
+                            <span style="color: #6b7280;">●</span> Test Markets
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Performance Toggle -->
+                <div class="filter-section">
+                    <label class="filter-label">Performance</label>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="showTopPerformers">
+                        <label for="showTopPerformers">Show Only Top 10% (by revenue)</label>
+                    </div>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="hideBottomPerformers">
+                        <label for="hideBottomPerformers">Hide Bottom 25%</label>
+                    </div>
+                </div>
+
+                <!-- Apply Buttons -->
+                <button class="filter-button" onclick="applyFilters()">Apply Filters</button>
+                <button class="filter-button secondary" onclick="resetFilters()">Reset All</button>
+
+                <!-- Stats -->
+                <div class="filter-stats" id="filterStats">
+                    Showing all locations
+                </div>
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <div class="section">
+                <h3>Market Tiers</h3>
+                
+                <div class="market-tier tier-core">
+                    <div class="tier-header">
+                        <span class="tier-name" style="color: #10b981;">CORE MARKETS</span>
+                        <span class="tier-count">5 States</span>
+                    </div>
+                    <div class="tier-stats">
+                        • $18.3M (88% of revenue)<br>
+                        • 9,514 customers<br>
+                        • MA, NY, NH, NJ, CT
+                    </div>
+                </div>
+                
+                <div class="market-tier tier-growth">
+                    <div class="tier-header">
+                        <span class="tier-name" style="color: #3b82f6;">GROWTH MARKETS</span>
+                        <span class="tier-count">6 States</span>
+                    </div>
+                    <div class="tier-stats">
+                        • $2.0M (9.6% of revenue)<br>
+                        • 2,011 customers<br>
+                        • RI, FL, PA, VA, ME, GA
+                    </div>
+                </div>
+                
+                <div class="market-tier tier-emerging">
+                    <div class="tier-header">
+                        <span class="tier-name" style="color: #f59e0b;">EMERGING MARKETS</span>
+                        <span class="tier-count">15 States</span>
+                    </div>
+                    <div class="tier-stats">
+                        • $529K (2.5% of revenue)<br>
+                        • 638 customers<br>
+                        • NC, MD, TN, OH, IL, VT, MI, DC, DE, TX, WI, WV, KY, SC + more
+                    </div>
+                </div>
+                
+                <div class="market-tier tier-test">
+                    <div class="tier-header">
+                        <span class="tier-name" style="color: #6b7280;">TEST MARKETS</span>
+                        <span class="tier-count">3 States</span>
+                    </div>
+                    <div class="tier-stats">
+                        • $11K (<0.1% of revenue)<br>
+                        • 30 customers<br>
+                        • IN, MO, CA
+                    </div>
+                </div>
+            </div>
+            
+            <div class="state-list">
+                <h4>Top 10 Markets by Revenue</h4>
+                <div class="state-row">
+                    <span class="state-name">1. Massachusetts</span>
+                    <span class="state-revenue">$12.5M</span>
+                </div>
+                <div class="state-row">
+                    <span class="state-name">2. New York</span>
+                    <span class="state-revenue">$1.95M</span>
+                </div>
+                <div class="state-row">
+                    <span class="state-name">3. New Hampshire</span>
+                    <span class="state-revenue">$1.67M</span>
+                </div>
+                <div class="state-row">
+                    <span class="state-name">4. New Jersey</span>
+                    <span class="state-revenue">$1.22M</span>
+                </div>
+                <div class="state-row">
+                    <span class="state-name">5. Connecticut</span>
+                    <span class="state-revenue">$1.02M</span>
+                </div>
+                <div class="state-row">
+                    <span class="state-name">6. Rhode Island</span>
+                    <span class="state-revenue">$665K</span>
+                </div>
+                <div class="state-row">
+                    <span class="state-name">7. Florida</span>
+                    <span class="state-revenue">$489K</span>
+                </div>
+                <div class="state-row">
+                    <span class="state-name">8. Pennsylvania</span>
+                    <span class="state-revenue">$397K</span>
+                </div>
+                <div class="state-row">
+                    <span class="state-name">9. Virginia</span>
+                    <span class="state-revenue">$190K</span>
+                </div>
+                <div class="state-row">
+                    <span class="state-name">10. Maine</span>
+                    <span class="state-revenue">$140K</span>
+                </div>
+            </div>
+            
+            <div class="section" style="background: #1f2937; padding: 15px; border-radius: 8px; border-left: 3px solid #10b981;">
+                <h3 style="margin-bottom: 10px;">💡 Coverage Insights</h3>
+                <ul style="font-size: 12px; line-height: 1.8; color: #d1d5db; list-style: none; padding: 0;">
+                    <li>→ 59.8% of revenue from MA alone</li>
+                    <li>→ Northeast = 88% of total business</li>
+                    <li>→ Strong expansion in FL (688 customers)</li>
+                    <li>→ MD/VA/DC need strengthening vs F&F</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="./zip_data_embed.js"></script>
+    <script src="./time_data_embed.js"></script>
+    <script>
+        // Initialize map
+        var map = L.map('map').setView([39.5, -80.0], 5);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        // State-level data (shown when zoomed out)
+        var nutreStates = [
+            // Core Markets
+            {state: 'MA', name: 'Massachusetts', coords: [42.3601, -71.0589], revenue: 12484131, customers: 5747, orders: 111901, tier: 'Core', color: '#10b981', size: 32},
+            {state: 'NY', name: 'New York', coords: [40.7128, -74.0060], revenue: 1951830, customers: 1402, orders: 17304, tier: 'Core', color: '#10b981', size: 24},
+            {state: 'NH', name: 'New Hampshire', coords: [43.2081, -71.5376], revenue: 1674471, customers: 874, orders: 14489, tier: 'Core', color: '#10b981', size: 22},
+            {state: 'NJ', name: 'New Jersey', coords: [40.0583, -74.4057], revenue: 1219848, customers: 1019, orders: 11232, tier: 'Core', color: '#10b981', size: 20},
+            {state: 'CT', name: 'Connecticut', coords: [41.6032, -73.0877], revenue: 1018962, customers: 472, orders: 8573, tier: 'Core', color: '#10b981', size: 18},
+            
+            // Growth Markets
+            {state: 'RI', name: 'Rhode Island', coords: [41.8240, -71.4128], revenue: 664569, customers: 382, orders: 5773, tier: 'Growth', color: '#3b82f6', size: 16},
+            {state: 'FL', name: 'Florida', coords: [27.9944, -81.7603], revenue: 489126, customers: 688, orders: 4738, tier: 'Growth', color: '#3b82f6', size: 15},
+            {state: 'PA', name: 'Pennsylvania', coords: [40.2732, -76.8867], revenue: 397318, customers: 351, orders: 3588, tier: 'Growth', color: '#3b82f6', size: 14},
+            {state: 'VA', name: 'Virginia', coords: [37.5407, -77.4360], revenue: 190413, customers: 224, orders: 1700, tier: 'Growth', color: '#3b82f6', size: 12},
+            {state: 'ME', name: 'Maine', coords: [44.3106, -69.7795], revenue: 140148, customers: 138, orders: 1156, tier: 'Growth', color: '#3b82f6', size: 11},
+            {state: 'GA', name: 'Georgia', coords: [33.7490, -84.3880], revenue: 117644, customers: 118, orders: 923, tier: 'Growth', color: '#3b82f6', size: 10},
+            
+            // Emerging Markets
+            {state: 'NC', name: 'North Carolina', coords: [35.7796, -78.6382], revenue: 88203, customers: 106, orders: 743, tier: 'Emerging', color: '#f59e0b', size: 9},
+            {state: 'MD', name: 'Maryland', coords: [39.0458, -76.6413], revenue: 85621, customers: 140, orders: 677, tier: 'Emerging', color: '#f59e0b', size: 9},
+            {state: 'TN', name: 'Tennessee', coords: [36.1627, -86.7816], revenue: 59891, customers: 85, orders: 641, tier: 'Emerging', color: '#f59e0b', size: 8},
+            {state: 'OH', name: 'Ohio', coords: [39.9612, -82.9988], revenue: 48207, customers: 78, orders: 451, tier: 'Emerging', color: '#f59e0b', size: 7},
+            {state: 'IL', name: 'Illinois', coords: [41.8781, -87.6298], revenue: 39313, customers: 82, orders: 348, tier: 'Emerging', color: '#f59e0b', size: 7},
+            {state: 'VT', name: 'Vermont', coords: [44.2601, -72.5754], revenue: 33421, customers: 32, orders: 272, tier: 'Emerging', color: '#f59e0b', size: 6},
+            {state: 'MI', name: 'Michigan', coords: [42.7325, -84.5555], revenue: 31957, customers: 56, orders: 260, tier: 'Emerging', color: '#f59e0b', size: 6},
+            {state: 'DC', name: 'Washington DC', coords: [38.9072, -77.0369], revenue: 27251, customers: 47, orders: 365, tier: 'Emerging', color: '#f59e0b', size: 6},
+            {state: 'DE', name: 'Delaware', coords: [39.1582, -75.5244], revenue: 22735, customers: 17, orders: 170, tier: 'Emerging', color: '#f59e0b', size: 5},
+            {state: 'TX', name: 'Texas', coords: [30.2672, -97.7431], revenue: 18823, customers: 27, orders: 136, tier: 'Emerging', color: '#f59e0b', size: 5},
+            {state: 'WI', name: 'Wisconsin', coords: [43.0731, -89.4012], revenue: 14886, customers: 30, orders: 124, tier: 'Emerging', color: '#f59e0b', size: 4},
+            {state: 'WV', name: 'West Virginia', coords: [38.3498, -81.6326], revenue: 13414, customers: 12, orders: 82, tier: 'Emerging', color: '#f59e0b', size: 4},
+            {state: 'KY', name: 'Kentucky', coords: [38.2009, -84.2700], revenue: 12383, customers: 14, orders: 90, tier: 'Emerging', color: '#f59e0b', size: 4},
+            {state: 'SC', name: 'South Carolina', coords: [34.0007, -81.0348], revenue: 10958, customers: 10, orders: 75, tier: 'Emerging', color: '#f59e0b', size: 4},
+            
+            // Test Markets
+            {state: 'IN', name: 'Indiana', coords: [39.7684, -86.1581], revenue: 6776, customers: 16, orders: 73, tier: 'Test', color: '#6b7280', size: 3},
+            {state: 'MO', name: 'Missouri', coords: [38.5767, -92.1735], revenue: 4322, customers: 12, orders: 30, tier: 'Test', color: '#6b7280', size: 3},
+            {state: 'CA', name: 'California', coords: [36.7783, -119.4179], revenue: 2, customers: 2, orders: 9, tier: 'Test', color: '#6b7280', size: 2},
+            {state: 'MS', name: 'Mississippi', coords: [32.3547, -89.3985], revenue: 0, customers: 0, orders: 1, tier: 'Test', color: '#6b7280', size: 2}
+        ];
+
+        // Layer groups for zoom-based display
+        var stateLayers = L.layerGroup();
+        var zipLayers = L.markerClusterGroup({
+            maxClusterRadius: 50,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true
+        });
+
+        // Store all markers for filtering (declare early!)
+        var allStateMarkers = [];
+        var allZipMarkers = [];
+
+        // Heat map layer
+        var heatLayer = null;
+
+        // Create state markers
+        nutreStates.forEach(function(state, index) {
+            var marker = L.circleMarker(state.coords, {
+                radius: state.size,
+                fillColor: state.color,
+                color: '#fff',
+                weight: 3,
+                opacity: 1,
+                fillOpacity: 0.75
+            });
+
+            var revenueFormatted = '$' + (state.revenue / 1000).toFixed(0) + 'K';
+            if (state.revenue >= 1000000) {
+                revenueFormatted = '$' + (state.revenue / 1000000).toFixed(2) + 'M';
+            }
+
+            var aov = state.orders > 0 ? (state.revenue / state.orders).toFixed(2) : '0.00';
+            var ordersPerCustomer = state.customers > 0 ? (state.orders / state.customers).toFixed(1) : '0.0';
+            var revPerCustomer = state.customers > 0 ? (state.revenue / state.customers).toFixed(0) : '0';
+
+            var html = '<div class="popup-header">';
+            html += '<div class="popup-state">' + state.name + '</div>';
+            html += '<div class="popup-tier">' + state.tier + ' Market</div>';
+            html += '</div>';
+
+            html += '<div class="metric-grid">';
+            html += '<div class="metric-box"><div class="metric-label">Revenue</div><div class="metric-value">' + revenueFormatted + '</div></div>';
+            html += '<div class="metric-box"><div class="metric-label">Customers</div><div class="metric-value">' + state.customers.toLocaleString() + '</div></div>';
+            html += '<div class="metric-box"><div class="metric-label">Orders</div><div class="metric-value">' + state.orders.toLocaleString() + '</div></div>';
+            html += '<div class="metric-box"><div class="metric-label">AOV</div><div class="metric-value">$' + aov + '</div></div>';
+            html += '</div>';
+
+            html += '<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #333; font-size: 12px; color: #9ca3af;">';
+            html += 'Orders/Customer: <strong style="color: #fff;">' + ordersPerCustomer + '</strong><br>';
+            html += 'Rev/Customer: <strong style="color: #fff;">$' + revPerCustomer + '</strong>';
+            html += '</div>';
+
+            marker.bindPopup(html, { maxWidth: 320 });
+            stateLayers.addLayer(marker);
+            allStateMarkers.push(marker); // Store for filtering
+        });
+
+        // Add state layer to map initially
+        stateLayers.addTo(map);
+        console.log('State markers added to map:', allStateMarkers.length);
+
+        // Load and create zip code markers from embedded data
+        (function() {
+            if (typeof zipCodeData === 'undefined') {
+                console.error('Zip code data not loaded!');
+                alert('Error: Zip code data file not loaded. Make sure zip_data_embed.js is in the same directory.');
+                // State layers already added above
+                return;
+            }
+
+            var zipData = zipCodeData;
+            console.log('Loaded ' + zipData.length + ' zip codes from embedded data');
+
+            zipData.forEach(function(zip) {
+                if (!zip.lat || !zip.lng) return;
+
+                // Calculate marker size based on revenue
+                var size = 4;
+                if (zip.revenue > 100000) size = 10;
+                else if (zip.revenue > 50000) size = 8;
+                else if (zip.revenue > 10000) size = 6;
+
+                var marker = L.circleMarker([zip.lat, zip.lng], {
+                    radius: size,
+                    fillColor: '#10b981',
+                    color: '#fff',
+                    weight: 1.5,
+                    opacity: 0.9,
+                    fillOpacity: 0.7
+                });
+
+                var revenueFormatted = '$' + (zip.revenue / 1000).toFixed(1) + 'K';
+                if (zip.revenue >= 1000000) {
+                    revenueFormatted = '$' + (zip.revenue / 1000000).toFixed(2) + 'M';
+                }
+
+                var aov = zip.orders > 0 ? (zip.revenue / zip.orders).toFixed(2) : '0.00';
+
+                var html = '<div class="popup-header">';
+                html += '<div class="popup-state">' + zip.city + ', ' + zip.state + ' ' + zip.zip + '</div>';
+                html += '</div>';
+
+                html += '<div class="metric-grid">';
+                html += '<div class="metric-box"><div class="metric-label">Revenue</div><div class="metric-value">' + revenueFormatted + '</div></div>';
+                html += '<div class="metric-box"><div class="metric-label">Orders</div><div class="metric-value">' + zip.orders.toLocaleString() + '</div></div>';
+                html += '<div class="metric-box"><div class="metric-label">AOV</div><div class="metric-value">$' + aov + '</div></div>';
+                html += '</div>';
+
+                marker.bindPopup(html, { maxWidth: 280 });
+                zipLayers.addLayer(marker);
+                allZipMarkers.push(marker); // Store for filtering
+            });
+
+            // State layer already added above, just log zip markers
+            console.log('Zip markers created:', allZipMarkers.length);
+
+            // Switch between state and zip views based on zoom level
+            function updateLayers() {
+                var zoom = map.getZoom();
+                document.getElementById('zoom-value').textContent = zoom;
+
+                // Don't switch layers if heat map is active
+                var heatMapActive = document.getElementById('heatmapCheckbox').checked;
+                if (heatMapActive) {
+                    document.getElementById('view-mode').textContent = 'Heat Map View';
+                    return;
+                }
+
+                if (zoom >= 7) {
+                    // Zoomed in - show zip codes
+                    document.getElementById('view-mode').textContent = 'Zip Code View (' + zipData.length + ' locations)';
+                    if (map.hasLayer(stateLayers)) {
+                        map.removeLayer(stateLayers);
+                        map.addLayer(zipLayers);
+                    }
+                } else {
+                    // Zoomed out - show states
+                    document.getElementById('view-mode').textContent = 'State View (Zoom in to see zip codes)';
+                    if (map.hasLayer(zipLayers)) {
+                        map.removeLayer(zipLayers);
+                        map.addLayer(stateLayers);
+                    }
+                }
+            }
+
+            map.on('zoomend', updateLayers);
+            map.on('zoom', function() {
+                document.getElementById('zoom-value').textContent = map.getZoom();
+            });
+        })();
+
+        L.control.scale({position: 'bottomleft', imperial: true, metric: false}).addTo(map);
+
+        // ========== FILTER FUNCTIONS ==========
+
+        // Populate state checkboxes
+        function initializeStateCheckboxes() {
+            var stateSet = new Set();
+            nutreStates.forEach(s => stateSet.add(s.state));
+
+            var container = document.getElementById('stateCheckboxes');
+            Array.from(stateSet).sort().forEach(state => {
+                var div = document.createElement('div');
+                div.className = 'filter-checkbox';
+                div.innerHTML = `
+                    <input type="checkbox" id="state_${state}" class="state-checkbox" value="${state}" checked>
+                    <label for="state_${state}">${state}</label>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Toggle filter panel
+        function toggleFilters() {
+            var panel = document.getElementById('filterPanel');
+            var text = document.getElementById('filter-toggle-text');
+            panel.classList.toggle('collapsed');
+            text.textContent = panel.classList.contains('collapsed') ? 'Show Filters' : 'Hide Filters';
+        }
+
+        // Update revenue label
+        function updateRevenueLabel(value) {
+            var label = document.getElementById('revenueLabel');
+            if (value >= 1000000) {
+                label.textContent = '$' + (value / 1000000).toFixed(1) + 'M';
+            } else if (value >= 1000) {
+                label.textContent = '$' + (value / 1000).toFixed(0) + 'K';
+            } else {
+                label.textContent = '$' + value;
+            }
+        }
+
+        // Toggle all states
+        function toggleAllStates(checked) {
+            document.querySelectorAll('.state-checkbox').forEach(cb => {
+                cb.checked = checked;
+            });
+        }
+
+        // Get filter criteria
+        function getFilterCriteria() {
+            var minRevenue = parseInt(document.getElementById('revenueSlider').value);
+
+            var selectedStates = new Set();
+            document.querySelectorAll('.state-checkbox:checked').forEach(cb => {
+                selectedStates.add(cb.value);
+            });
+
+            var tiers = {
+                'Core': document.getElementById('tierCore').checked,
+                'Growth': document.getElementById('tierGrowth').checked,
+                'Emerging': document.getElementById('tierEmerging').checked,
+                'Test': document.getElementById('tierTest').checked
+            };
+
+            var showTopOnly = document.getElementById('showTopPerformers').checked;
+            var hideBottom = document.getElementById('hideBottomPerformers').checked;
+
+            return { minRevenue, selectedStates, tiers, showTopOnly, hideBottom };
+        }
+
+        // Apply filters to state markers
+        function filterStateMarkers(criteria) {
+            var visibleCount = 0;
+            var totalRevenue = 0;
+
+            nutreStates.forEach((state, index) => {
+                var marker = allStateMarkers[index];
+                if (!marker) return;
+
+                var show = true;
+
+                // Revenue filter
+                if (state.revenue < criteria.minRevenue) show = false;
+
+                // State filter
+                if (!criteria.selectedStates.has(state.state)) show = false;
+
+                // Tier filter
+                if (!criteria.tiers[state.tier]) show = false;
+
+                if (show) {
+                    if (!stateLayers.hasLayer(marker)) {
+                        stateLayers.addLayer(marker);
+                    }
+                    visibleCount++;
+                    totalRevenue += state.revenue;
+                } else {
+                    stateLayers.removeLayer(marker);
+                }
+            });
+
+            return { count: visibleCount, revenue: totalRevenue };
+        }
+
+        // Apply filters to zip markers
+        function filterZipMarkers(criteria) {
+            if (!window.zipCodeData) return { count: 0, revenue: 0 };
+
+            var visibleCount = 0;
+            var totalRevenue = 0;
+
+            // Calculate percentile thresholds
+            var revenues = zipCodeData.map(z => z.revenue).sort((a, b) => b - a);
+            var top10Threshold = criteria.showTopOnly ? revenues[Math.floor(revenues.length * 0.1)] : 0;
+            var bottom25Threshold = criteria.hideBottom ? revenues[Math.floor(revenues.length * 0.75)] : 0;
+
+            zipCodeData.forEach((zip, index) => {
+                var marker = allZipMarkers[index];
+                if (!marker || !zip.lat || !zip.lng) return;
+
+                var show = true;
+
+                // Revenue filter
+                if (zip.revenue < criteria.minRevenue) show = false;
+
+                // State filter
+                if (!criteria.selectedStates.has(zip.state)) show = false;
+
+                // Top performers filter
+                if (criteria.showTopOnly && zip.revenue < top10Threshold) show = false;
+
+                // Hide bottom performers
+                if (criteria.hideBottom && zip.revenue <= bottom25Threshold) show = false;
+
+                if (show) {
+                    if (!zipLayers.hasLayer(marker)) {
+                        zipLayers.addLayer(marker);
+                    }
+                    visibleCount++;
+                    totalRevenue += zip.revenue;
+                } else {
+                    zipLayers.removeLayer(marker);
+                }
+            });
+
+            return { count: visibleCount, revenue: totalRevenue };
+        }
+
+        // Apply all filters
+        function applyFilters() {
+            var criteria = getFilterCriteria();
+
+            var stateStats = filterStateMarkers(criteria);
+            var zipStats = filterZipMarkers(criteria);
+
+            // Update stats display
+            var statsDiv = document.getElementById('filterStats');
+            var currentZoom = map.getZoom();
+            var stats = currentZoom >= 7 ? zipStats : stateStats;
+
+            var revenueFormatted = stats.revenue >= 1000000
+                ? '$' + (stats.revenue / 1000000).toFixed(1) + 'M'
+                : '$' + (stats.revenue / 1000).toFixed(0) + 'K';
+
+            statsDiv.innerHTML = `
+                Showing <strong>${stats.count}</strong> locations<br>
+                Total Revenue: <strong>${revenueFormatted}</strong>
+            `;
+
+            // Refresh the current layer
+            map.fireEvent('zoomend');
+        }
+
+        // Reset all filters
+        function resetFilters() {
+            document.getElementById('revenueSlider').value = 0;
+            updateRevenueLabel(0);
+            document.getElementById('stateAll').checked = true;
+            toggleAllStates(true);
+            document.getElementById('tierCore').checked = true;
+            document.getElementById('tierGrowth').checked = true;
+            document.getElementById('tierEmerging').checked = true;
+            document.getElementById('tierTest').checked = true;
+            document.getElementById('showTopPerformers').checked = false;
+            document.getElementById('hideBottomPerformers').checked = false;
+            applyFilters();
+        }
+
+        // Initialize filters after map loads
+        initializeStateCheckboxes();
+
+        // ========== SEARCH FUNCTIONS ==========
+
+        var searchMarker = null; // Store the highlighted search result marker
+
+        function handleSearch(query) {
+            var resultsDiv = document.getElementById('searchResults');
+
+            if (!query || query.length < 2) {
+                resultsDiv.innerHTML = '';
+                clearSearchHighlight();
+                return;
+            }
+
+            query = query.toLowerCase().trim();
+            var results = [];
+
+            // Search in zip code data
+            if (window.zipCodeData) {
+                zipCodeData.forEach(function(zip, index) {
+                    if (!zip.lat || !zip.lng) return;
+
+                    var matchScore = 0;
+                    var matchType = '';
+
+                    // Exact zip code match
+                    if (zip.zip === query) {
+                        matchScore = 100;
+                        matchType = 'Exact Zip Match';
+                    }
+                    // Partial zip match
+                    else if (zip.zip.startsWith(query)) {
+                        matchScore = 80;
+                        matchType = 'Zip Code';
+                    }
+                    // City name match
+                    else if (zip.city.toLowerCase().includes(query)) {
+                        if (zip.city.toLowerCase() === query) {
+                            matchScore = 90; // Exact city match
+                        } else if (zip.city.toLowerCase().startsWith(query)) {
+                            matchScore = 70; // Starts with query
+                        } else {
+                            matchScore = 50; // Contains query
+                        }
+                        matchType = 'City';
+                    }
+                    // State match
+                    else if (zip.state.toLowerCase() === query) {
+                        matchScore = 40;
+                        matchType = 'State';
+                    }
+
+                    if (matchScore > 0) {
+                        results.push({
+                            zip: zip.zip,
+                            city: zip.city,
+                            state: zip.state,
+                            revenue: zip.revenue,
+                            orders: zip.orders,
+                            lat: zip.lat,
+                            lng: zip.lng,
+                            score: matchScore,
+                            type: matchType,
+                            index: index
+                        });
+                    }
+                });
+            }
+
+            // Sort by match score (highest first), then by revenue
+            results.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return b.revenue - a.revenue;
+            });
+
+            // Limit to top 10 results
+            results = results.slice(0, 10);
+
+            displaySearchResults(results);
+        }
+
+        function displaySearchResults(results) {
+            var resultsDiv = document.getElementById('searchResults');
+
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<div class="search-no-results">No locations found</div>';
+                return;
+            }
+
+            var html = '';
+            results.forEach(function(result) {
+                var revenueFormatted = '$' + (result.revenue / 1000).toFixed(1) + 'K';
+                if (result.revenue >= 1000000) {
+                    revenueFormatted = '$' + (result.revenue / 1000000).toFixed(2) + 'M';
+                }
+
+                html += '<div class="search-result-item" onclick="zoomToLocation(' +
+                        result.lat + ', ' + result.lng + ', \'' +
+                        result.zip + '\', ' + result.index + ')">';
+                html += '<div class="search-result-name">' + result.city + ', ' + result.state + ' ' + result.zip + '</div>';
+                html += '<div class="search-result-details">';
+                html += '<span class="search-result-revenue">' + revenueFormatted + '</span> • ';
+                html += result.orders + ' orders';
+                html += '</div>';
+                html += '</div>';
+            });
+
+            resultsDiv.innerHTML = html;
+        }
+
+        function zoomToLocation(lat, lng, zipCode, zipIndex) {
+            // Clear previous search highlight
+            clearSearchHighlight();
+
+            // Zoom to location
+            map.setView([lat, lng], 12, {
+                animate: true,
+                duration: 1
+            });
+
+            // Wait a moment for zoom to complete, then highlight the marker
+            setTimeout(function() {
+                // Make sure we're in zip view
+                if (map.getZoom() >= 7) {
+                    var marker = allZipMarkers[zipIndex];
+                    if (marker) {
+                        // Create a temporary highlight marker
+                        searchMarker = L.circleMarker([lat, lng], {
+                            radius: 15,
+                            fillColor: '#fbbf24',
+                            color: '#fff',
+                            weight: 3,
+                            opacity: 1,
+                            fillOpacity: 0.6
+                        }).addTo(map);
+
+                        // Pulse animation
+                        var pulseCount = 0;
+                        var pulseInterval = setInterval(function() {
+                            if (pulseCount >= 3) {
+                                clearInterval(pulseInterval);
+                                if (searchMarker) {
+                                    map.removeLayer(searchMarker);
+                                    searchMarker = null;
+                                }
+                                return;
+                            }
+                            if (searchMarker) {
+                                var currentRadius = searchMarker.getRadius();
+                                searchMarker.setRadius(currentRadius === 15 ? 20 : 15);
+                            }
+                            pulseCount++;
+                        }, 300);
+
+                        // Open the actual marker's popup
+                        marker.openPopup();
+                    }
+                }
+            }, 500);
+
+            // Clear search input and results
+            setTimeout(function() {
+                document.getElementById('searchInput').value = '';
+                document.getElementById('searchResults').innerHTML = '';
+            }, 1500);
+        }
+
+        function clearSearchHighlight() {
+            if (searchMarker) {
+                map.removeLayer(searchMarker);
+                searchMarker = null;
+            }
+        }
+
+        // ========== HEAT MAP FUNCTIONS ==========
+
+        function createHeatMap() {
+            if (!window.zipCodeData) {
+                console.log('Zip code data not available for heat map');
+                return null;
+            }
+
+            // Prepare heat map data: [lat, lng, intensity]
+            var heatData = [];
+            var maxRevenue = 0;
+
+            // Find max revenue for normalization
+            zipCodeData.forEach(function(zip) {
+                if (zip.lat && zip.lng && zip.revenue > maxRevenue) {
+                    maxRevenue = zip.revenue;
+                }
+            });
+
+            // Create heat points with normalized intensity
+            zipCodeData.forEach(function(zip) {
+                if (!zip.lat || !zip.lng) return;
+
+                // Normalize revenue to 0-1 scale, but use log scale for better visualization
+                // This prevents a few high-revenue zips from dominating the entire heat map
+                var normalizedIntensity = Math.log(zip.revenue + 1) / Math.log(maxRevenue + 1);
+
+                // Scale up the intensity for better visibility (0-10 range)
+                var intensity = normalizedIntensity * 10;
+
+                heatData.push([zip.lat, zip.lng, intensity]);
+            });
+
+            console.log('Heat map created with', heatData.length, 'points');
+
+            // Create heat layer with custom gradient
+            var heat = L.heatLayer(heatData, {
+                radius: 25,
+                blur: 35,
+                maxZoom: 17,
+                max: 10,
+                gradient: {
+                    0.0: 'blue',
+                    0.2: 'cyan',
+                    0.4: 'lime',
+                    0.6: 'yellow',
+                    0.8: 'orange',
+                    1.0: 'red'
+                }
+            });
+
+            return heat;
+        }
+
+        function toggleHeatMap(show) {
+            var legend = document.getElementById('heatmapLegend');
+
+            if (show) {
+                // Create heat map if it doesn't exist
+                if (!heatLayer) {
+                    heatLayer = createHeatMap();
+                    if (!heatLayer) {
+                        document.getElementById('heatmapCheckbox').checked = false;
+                        alert('Heat map data not available. Please wait for zip codes to load.');
+                        return;
+                    }
+                }
+
+                // Hide markers and show heat map
+                if (map.hasLayer(stateLayers)) {
+                    map.removeLayer(stateLayers);
+                }
+                if (map.hasLayer(zipLayers)) {
+                    map.removeLayer(zipLayers);
+                }
+
+                heatLayer.addTo(map);
+                legend.classList.add('active');
+
+                console.log('Heat map enabled');
+            } else {
+                // Hide heat map and show appropriate marker layer
+                if (heatLayer && map.hasLayer(heatLayer)) {
+                    map.removeLayer(heatLayer);
+                }
+
+                // Show appropriate layer based on zoom
+                var zoom = map.getZoom();
+                if (zoom >= 7) {
+                    map.addLayer(zipLayers);
+                } else {
+                    map.addLayer(stateLayers);
+                }
+
+                legend.classList.remove('active');
+
+                console.log('Heat map disabled');
+            }
+        }
+
+        // ========== TIME ANALYSIS FUNCTIONS ==========
+
+        var months = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+        var currentMonthIndex = 10; // November (latest month with data)
+        var animationInterval = null;
+        var timeMode = false;
+        var timeMarkers = L.markerClusterGroup({
+            maxClusterRadius: 50,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true
+        });
+
+        function toggleTimeControls() {
+            var controls = document.getElementById('timeControls');
+            var isActive = controls.classList.toggle('active');
+
+            if (isActive) {
+                timeMode = true;
+                // Initialize with current month
+                updateTimeView(currentMonthIndex);
+            } else {
+                timeMode = false;
+                stopAnimation();
+                // Return to normal view
+                if (map.hasLayer(timeMarkers)) {
+                    map.removeLayer(timeMarkers);
+                }
+                var zoom = map.getZoom();
+                if (zoom >= 7) {
+                    map.addLayer(zipLayers);
+                } else {
+                    map.addLayer(stateLayers);
+                }
+            }
+        }
+
+        function updateTimeView(monthIndex) {
+            if (!window.timeData) {
+                console.log('Time data not loaded');
+                return;
+            }
+
+            monthIndex = parseInt(monthIndex);
+            var month = months[monthIndex];
+            var monthData = timeData[month];
+
+            if (!monthData) {
+                console.log('No data for month:', month);
+                return;
+            }
+
+            // Update month label
+            document.getElementById('monthLabel').textContent = month + ' 2025';
+
+            // Calculate statistics
+            var totalRevenue = 0;
+            var totalOrders = 0;
+            var locationCount = monthData.length;
+
+            monthData.forEach(function(loc) {
+                totalRevenue += loc.revenue;
+                totalOrders += loc.orders;
+            });
+
+            var avgAOV = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+            // Update display
+            document.getElementById('timeRevenue').textContent = '$' + (totalRevenue / 1000000).toFixed(2) + 'M';
+            document.getElementById('timeOrders').textContent = totalOrders.toLocaleString();
+            document.getElementById('timeLocations').textContent = locationCount.toLocaleString();
+            document.getElementById('timeAOV').textContent = '$' + avgAOV.toFixed(2);
+
+            // Calculate month-over-month changes
+            if (monthIndex > 0) {
+                var prevMonth = months[monthIndex - 1];
+                var prevMonthData = timeData[prevMonth];
+
+                if (prevMonthData) {
+                    var prevRevenue = prevMonthData.reduce((sum, loc) => sum + loc.revenue, 0);
+                    var prevOrders = prevMonthData.reduce((sum, loc) => sum + loc.orders, 0);
+                    var prevLocations = prevMonthData.length;
+                    var prevAOV = prevOrders > 0 ? prevRevenue / prevOrders : 0;
+
+                    updateChangeIndicator('timeRevenueChange', totalRevenue, prevRevenue);
+                    updateChangeIndicator('timeOrdersChange', totalOrders, prevOrders);
+                    updateChangeIndicator('timeLocationsChange', locationCount, prevLocations);
+                    updateChangeIndicator('timeAOVChange', avgAOV, prevAOV);
+                }
+            } else {
+                // First month - no comparison
+                document.getElementById('timeRevenueChange').textContent = '';
+                document.getElementById('timeOrdersChange').textContent = '';
+                document.getElementById('timeLocationsChange').textContent = '';
+                document.getElementById('timeAOVChange').textContent = '';
+            }
+
+            // Update map markers
+            displayTimeMarkers(monthData);
+        }
+
+        function updateChangeIndicator(elementId, current, previous) {
+            var element = document.getElementById(elementId);
+            var change = ((current - previous) / previous * 100);
+            var changeText = (change >= 0 ? '▲ +' : '▼ ') + Math.abs(change).toFixed(1) + '%';
+
+            element.textContent = changeText;
+            element.className = 'time-stat-change ' + (change >= 0 ? 'positive' : 'negative');
+        }
+
+        function displayTimeMarkers(monthData) {
+            // Clear existing time markers
+            timeMarkers.clearLayers();
+
+            // Hide regular layers
+            if (map.hasLayer(stateLayers)) map.removeLayer(stateLayers);
+            if (map.hasLayer(zipLayers)) map.removeLayer(zipLayers);
+            if (map.hasLayer(heatLayer)) map.removeLayer(heatLayer);
+
+            // Create markers for this month's data
+            monthData.forEach(function(loc) {
+                if (!loc.lat || !loc.lng) return;
+
+                var size = 4;
+                if (loc.revenue > 100000) size = 10;
+                else if (loc.revenue > 50000) size = 8;
+                else if (loc.revenue > 10000) size = 6;
+
+                var marker = L.circleMarker([loc.lat, loc.lng], {
+                    radius: size,
+                    fillColor: '#10b981',
+                    color: '#fff',
+                    weight: 1.5,
+                    opacity: 0.9,
+                    fillOpacity: 0.7
+                });
+
+                var revenueFormatted = '$' + (loc.revenue / 1000).toFixed(1) + 'K';
+                if (loc.revenue >= 1000000) {
+                    revenueFormatted = '$' + (loc.revenue / 1000000).toFixed(2) + 'M';
+                }
+
+                var aov = loc.orders > 0 ? (loc.revenue / loc.orders).toFixed(2) : '0.00';
+
+                var html = '<div class="popup-header">';
+                html += '<div class="popup-state">' + loc.city + ', ' + loc.state + ' ' + loc.zip + '</div>';
+                html += '</div>';
+                html += '<div class="metric-grid">';
+                html += '<div class="metric-box"><div class="metric-label">Revenue</div><div class="metric-value">' + revenueFormatted + '</div></div>';
+                html += '<div class="metric-box"><div class="metric-label">Orders</div><div class="metric-value">' + loc.orders.toLocaleString() + '</div></div>';
+                html += '<div class="metric-box"><div class="metric-label">AOV</div><div class="metric-value">$' + aov + '</div></div>';
+                html += '</div>';
+
+                marker.bindPopup(html, { maxWidth: 280 });
+                timeMarkers.addLayer(marker);
+            });
+
+            // Add to map
+            timeMarkers.addTo(map);
+        }
+
+        function animateTime() {
+            if (animationInterval) return; // Already animating
+
+            var currentIndex = parseInt(document.getElementById('timeSlider').value);
+
+            animationInterval = setInterval(function() {
+                currentIndex++;
+                if (currentIndex > 10) currentIndex = 0; // Loop back to January
+
+                document.getElementById('timeSlider').value = currentIndex;
+                updateTimeView(currentIndex);
+            }, 1500); // Change month every 1.5 seconds
+        }
+
+        function stopAnimation() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+        }
+
+        function resetToCurrentMonth() {
+            stopAnimation();
+            document.getElementById('timeSlider').value = currentMonthIndex;
+            updateTimeView(currentMonthIndex);
+        }
+
+        // Initial stats update
+        setTimeout(function() {
+            var statsDiv = document.getElementById('filterStats');
+            statsDiv.innerHTML = `
+                Showing <strong>${nutreStates.length}</strong> states<br>
+                <strong>3,407</strong> zip codes loaded
+            `;
+        }, 100);
+    </script>
+</body>
+</html>
