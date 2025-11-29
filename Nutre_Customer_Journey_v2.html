@@ -1,0 +1,2331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutre Customer Journey Calendar v2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #22c55e, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        
+        .key-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .key-info-item {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+        }
+        
+        .key-info-item strong {
+            color: #22c55e;
+        }
+        
+        /* Legend */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            padding: 20px;
+            background: #1e293b;
+            border-radius: 12px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        
+        .legend-dot.email { background: #3b82f6; }
+        .legend-dot.sms { background: #22c55e; }
+        .legend-dot.app { background: #a855f7; }
+        .legend-dot.inbox { background: #f59e0b; }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 50px;
+        }
+        
+        .stat-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #334155;
+        }
+        
+        .stat-card .number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #22c55e;
+        }
+        
+        .stat-card .label {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+        
+        /* Phase Headers */
+        .phase-section {
+            margin-bottom: 60px;
+        }
+        
+        .phase-header {
+            padding: 24px 30px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .phase-header.critical { 
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            box-shadow: 0 4px 20px rgba(220, 38, 38, 0.3);
+        }
+        .phase-header.building { 
+            background: linear-gradient(135deg, #d97706, #b45309);
+            box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3);
+        }
+        .phase-header.loyal { 
+            background: linear-gradient(135deg, #059669, #047857);
+            box-shadow: 0 4px 20px rgba(5, 150, 105, 0.3);
+        }
+        .phase-header.vip { 
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
+        }
+        .phase-header.ongoing { 
+            background: linear-gradient(135deg, #0891b2, #0e7490);
+            box-shadow: 0 4px 20px rgba(8, 145, 178, 0.3);
+        }
+        .phase-header.winback { 
+            background: linear-gradient(135deg, #64748b, #475569);
+            box-shadow: 0 4px 20px rgba(100, 116, 139, 0.3);
+        }
+        
+        .phase-header h2 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .phase-meta {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .phase-orders {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .phase-goal {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            max-width: 300px;
+        }
+        
+        /* Week Container */
+        .week-container {
+            margin-bottom: 30px;
+            background: #1e293b;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #334155;
+        }
+        
+        .week-header {
+            padding: 16px 24px;
+            background: #334155;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .order-badge {
+            background: #3b82f6;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .order-badge.threshold {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        
+        .order-badge.vip {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        }
+        
+        .order-badge.loyal {
+            background: linear-gradient(135deg, #059669, #047857);
+        }
+        
+        .week-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .week-subtitle {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-left: auto;
+        }
+        
+        /* Week Grid */
+        .week-grid {
+            display: grid;
+            grid-template-columns: 150px repeat(4, 1fr);
+            gap: 1px;
+            background: #0f172a;
+        }
+        
+        .grid-header {
+            background: #0f172a;
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .grid-header .channel-icon {
+            font-size: 1rem;
+        }
+        
+        .grid-cell {
+            background: #1e293b;
+            padding: 16px;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .day-label {
+            background: #0f172a;
+            padding: 16px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .day-note {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 400;
+            margin-top: 4px;
+        }
+        
+        /* Touchpoint Items */
+        .touchpoint {
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            line-height: 1.45;
+        }
+        
+        .touchpoint.email {
+            background: rgba(59, 130, 246, 0.12);
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .touchpoint.sms {
+            background: rgba(34, 197, 94, 0.12);
+            border-left: 3px solid #22c55e;
+        }
+        
+        .touchpoint.app {
+            background: rgba(168, 85, 247, 0.12);
+            border-left: 3px solid #a855f7;
+        }
+        
+        .touchpoint.inbox {
+            background: rgba(245, 158, 11, 0.12);
+            border-left: 3px solid #f59e0b;
+        }
+        
+        .touchpoint .msg-title {
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+            color: #e2e8f0;
+        }
+        
+        .touchpoint .msg-body {
+            color: #cbd5e1;
+            font-size: 0.8rem;
+        }
+        
+        .empty-cell {
+            color: #475569;
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+        
+        /* Unlock Box */
+        .unlock-box {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.08));
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 0 24px 24px;
+        }
+        
+        .unlock-box h4 {
+            color: #22c55e;
+            font-size: 0.9rem;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .unlock-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .unlock-item {
+            background: rgba(34, 197, 94, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        /* Conditional Note */
+        .conditional-note {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px dashed rgba(251, 191, 36, 0.4);
+            border-radius: 10px;
+            padding: 14px 20px;
+            margin: 0 24px 20px;
+            font-size: 0.85rem;
+            color: #fcd34d;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Compact Grid for Ongoing */
+        .compact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            padding: 0 0 20px;
+        }
+        
+        .compact-card {
+            background: #1e293b;
+            border-radius: 14px;
+            padding: 24px;
+            border: 1px solid #334155;
+        }
+        
+        .compact-card h4 {
+            font-size: 1rem;
+            margin-bottom: 6px;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .compact-card .timing {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 14px;
+        }
+        
+        .compact-card .touchpoint {
+            margin-top: 10px;
+        }
+        
+        /* Win-back Table */
+        .winback-grid {
+            display: grid;
+            grid-template-columns: 180px repeat(4, 1fr);
+            gap: 1px;
+            background: #0f172a;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        
+        /* Weekly Rhythm Section */
+        .rhythm-section {
+            margin-top: 30px;
+        }
+        
+        .rhythm-title {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .rhythm-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+        }
+        
+        .rhythm-day {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #334155;
+        }
+        
+        .rhythm-day h5 {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .rhythm-day .touchpoint {
+            font-size: 0.75rem;
+            padding: 8px 10px;
+        }
+        
+        /* Referral Section */
+        .referral-highlight {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 30px;
+        }
+        
+        .referral-highlight h3 {
+            color: #60a5fa;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .referral-highlight p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+        
+        .referral-amount {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .week-grid, .winback-grid {
+                grid-template-columns: 120px repeat(4, 1fr);
+            }
+            
+            .rhythm-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        @media (max-width: 900px) {
+            .week-grid, .winback-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .grid-header {
+                display: none;
+            }
+            
+            .day-label {
+                background: #334155;
+                border-bottom: 1px solid #475569;
+            }
+            
+            .grid-cell {
+                padding: 12px 16px;
+                min-height: auto;
+            }
+            
+            .grid-cell::before {
+                content: attr(data-channel);
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                color: #64748b;
+                margin-bottom: 8px;
+                display: block;
+            }
+            
+            .rhythm-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .key-info {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .phase-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .phase-meta {
+                flex-direction: column;
+            }
+
+            .rhythm-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Edit Mode Styles */
+        .edit-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .edit-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .edit-btn.toggle {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .edit-btn.toggle.active {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+        }
+
+        .edit-btn.save {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+        }
+
+        .edit-btn.export {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .edit-btn.import {
+            background: linear-gradient(135deg, #a855f7, #9333ea);
+            color: white;
+        }
+
+        .edit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .edit-mode .touchpoint {
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .edit-mode .touchpoint:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .edit-mode .touchpoint::after {
+            content: '✏️';
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .edit-mode .touchpoint:hover::after {
+            opacity: 1;
+        }
+
+        .delete-btn {
+            position: absolute;
+            right: 35px;
+            top: 8px;
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .edit-mode .touchpoint:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .add-touchpoint-btn {
+            padding: 8px 16px;
+            background: rgba(59, 130, 246, 0.2);
+            border: 2px dashed #3b82f6;
+            border-radius: 8px;
+            color: #60a5fa;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .add-touchpoint-btn:hover {
+            background: rgba(59, 130, 246, 0.3);
+            border-color: #60a5fa;
+        }
+
+        .edit-mode .grid-cell {
+            min-height: 120px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid #334155;
+        }
+
+        .modal-header {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #e2e8f0;
+        }
+
+        .modal-field {
+            margin-bottom: 20px;
+        }
+
+        .modal-field label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .modal-field input,
+        .modal-field textarea,
+        .modal-field select {
+            width: 100%;
+            padding: 12px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        .modal-field textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+        }
+
+        .modal-btn.secondary {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        #importInput {
+            display: none;
+        }
+
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 3000;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <!-- Header -->
+        <div class="header">
+            <h1>🥗 Nutre Customer Journey</h1>
+            <p class="subtitle">Complete Retention Roadmap • Every Touchpoint • Every Channel</p>
+            
+            <div class="key-info">
+                <div class="key-info-item"><strong>Cutoff:</strong> Wednesday 11:59 PM</div>
+                <div class="key-info-item"><strong>Delivery:</strong> Sunday & Monday</div>
+                <div class="key-info-item"><strong>VIP:</strong> 10% off for life @ Order 10</div>
+                <div class="key-info-item"><strong>Referral:</strong> Give $100, Get $100</div>
+            </div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item"><div class="legend-dot email"></div> Email</div>
+            <div class="legend-item"><div class="legend-dot sms"></div> SMS</div>
+            <div class="legend-item"><div class="legend-dot app"></div> App Push</div>
+            <div class="legend-item"><div class="legend-dot inbox"></div> In-Box / Physical</div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="number">10</div>
+                <div class="label">Weeks to VIP</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">4</div>
+                <div class="label">Sticky Threshold</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">10%</div>
+                <div class="label">VIP Discount</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">$100</div>
+                <div class="label">Referral Reward</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">4</div>
+                <div class="label">Channels</div>
+            </div>
+        </div>
+        
+        <!-- Referral Highlight -->
+        <div class="referral-highlight">
+            <h3>🎁 Referral Program — Available from Day 1</h3>
+            <p>Every customer can refer friends from their very first order. No unlock required.</p>
+            <div class="referral-amount">Give $100, Get $100</div>
+        </div>
+        
+        
+        <!-- ==================== CRITICAL PHASE ==================== -->
+        <div class="phase-section">
+            <div class="phase-header critical">
+                <h2>🚨 CRITICAL PHASE</h2>
+                <div class="phase-meta">
+                    <span class="phase-orders">Orders 1-2</span>
+                    <span class="phase-goal">40% drop here. Make them feel like geniuses for choosing Nutre.</span>
+                </div>
+            </div>
+            
+            <!-- Order 1 -->
+            <div class="week-container">
+                <div class="week-header">
+                    <span class="order-badge">ORDER 1</span>
+                    <span class="week-title">First Impressions</span>
+                    <span class="week-subtitle">Make it memorable</span>
+                </div>
+                
+                <div class="week-grid">
+                    <div class="grid-header"></div>
+                    <div class="grid-header"><span class="channel-icon">📧</span> Email</div>
+                    <div class="grid-header"><span class="channel-icon">💬</span> SMS</div>
+                    <div class="grid-header"><span class="channel-icon">📱</span> App Push</div>
+                    <div class="grid-header"><span class="channel-icon">📦</span> In-Box</div>
+                    
+                    <!-- Order Placed -->
+                    <div class="day-label">Order Placed<div class="day-note">Before Wed midnight</div></div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"Welcome to Nutre"</div>
+                            <div class="msg-body">Founders story, mission, no seed oils, Bell & Evans chicken, what makes us different</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS">
+                        <div class="touchpoint sms">
+                            <div class="msg-body">"Your first Nutre order is confirmed 🎉 We're prepping your meals now."</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Welcome to Nutre! 🎉"</div>
+                            <div class="msg-body">Your first order is confirmed. Delivery Sunday or Monday.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <!-- Saturday -->
+                    <div class="day-label">Saturday<div class="day-note">Day before delivery</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS">
+                        <div class="touchpoint sms">
+                            <div class="msg-body">"Your meals are packed and ready. Delivery tomorrow 🚚"</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Delivery tomorrow! 📦"</div>
+                            <div class="msg-body">Make room in the fridge — your Nutre meals arrive in the morning.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <!-- Sunday/Monday -->
+                    <div class="day-label">Sunday/Monday<div class="day-note">Delivery day</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS">
+                        <div class="touchpoint sms">
+                            <div class="msg-body">"Your meals just arrived! Pro tip: [specific reheating tip for their top meal]"</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Your first Nutre delivery! 📦"</div>
+                            <div class="msg-body">They're here! Check your box for a welcome card from our founders.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box">
+                        <div class="touchpoint inbox">
+                            <div class="msg-body">Handwritten founders card</div>
+                        </div>
+                        <div class="touchpoint inbox">
+                            <div class="msg-body">Reheating guide (fridge magnet)</div>
+                        </div>
+                        <div class="touchpoint inbox">
+                            <div class="msg-body">Surprise extra (sample or treat)</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tuesday -->
+                    <div class="day-label">Tuesday<div class="day-note">Rating + referral intro</div></div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"Know someone who needs this?"</div>
+                            <div class="msg-body">Give $100, Get $100 when you refer a friend. Share your link.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"How are your meals? ⭐"</div>
+                            <div class="msg-body">Quick feedback: which meal was your favorite? Tap to rate.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <!-- Wednesday AM -->
+                    <div class="day-label">Wednesday 9am<div class="day-note">Cutoff day</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS">
+                        <div class="touchpoint sms">
+                            <div class="msg-body">"Ready for next week? Order by midnight for Sunday delivery."</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Order deadline tonight 🕐"</div>
+                            <div class="msg-body">Lock in your meals by midnight for Sunday delivery.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <!-- Wednesday 8pm -->
+                    <div class="day-label">Wednesday 8pm<div class="day-note">Final nudge</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"4 hours left ⏰"</div>
+                            <div class="msg-body">Cutoff is midnight. Your favorites are waiting.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                </div>
+            </div>
+            
+            <!-- Win-Back Week 2 -->
+            <div class="week-container">
+                <div class="week-header">
+                    <span class="order-badge" style="background: #64748b;">IF NO ORDER 2</span>
+                    <span class="week-title">Win-Back Sequence</span>
+                    <span class="week-subtitle">Soft recovery — no discount yet</span>
+                </div>
+                
+                <div class="conditional-note">
+                    ⚠️ This sequence only triggers if customer hasn't placed Order 2 by Wednesday
+                </div>
+                
+                <div class="week-grid">
+                    <div class="grid-header"></div>
+                    <div class="grid-header"><span class="channel-icon">📧</span> Email</div>
+                    <div class="grid-header"><span class="channel-icon">💬</span> SMS</div>
+                    <div class="grid-header"><span class="channel-icon">📱</span> App Push</div>
+                    <div class="grid-header"><span class="channel-icon">📦</span> In-Box</div>
+                    
+                    <div class="day-label">Monday 6pm<div class="day-note">Soft reminder</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"New menu is live 🍽️"</div>
+                            <div class="msg-body">This week's meals are ready. Order by Wednesday midnight.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Wednesday 12pm</div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"Everything okay?"</div>
+                            <div class="msg-body">We noticed you haven't ordered again. Just checking in — we're here if you need anything.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"12 hours left ⏰"</div>
+                            <div class="msg-body">We saved your favorites — one tap to reorder.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Wednesday 8pm</div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS">
+                        <div class="touchpoint sms">
+                            <div class="msg-body">"4 hours left to order for Sunday delivery 👀"</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"4 hours left 🚨"</div>
+                            <div class="msg-body">Don't miss this week. Quick reorder available now.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                </div>
+            </div>
+            
+            <!-- Order 2 -->
+            <div class="week-container">
+                <div class="week-header">
+                    <span class="order-badge">ORDER 2</span>
+                    <span class="week-title">They Came Back!</span>
+                    <span class="week-subtitle">Celebrate the return</span>
+                </div>
+                
+                <div class="week-grid">
+                    <div class="grid-header"></div>
+                    <div class="grid-header"><span class="channel-icon">📧</span> Email</div>
+                    <div class="grid-header"><span class="channel-icon">💬</span> SMS</div>
+                    <div class="grid-header"><span class="channel-icon">📱</span> App Push</div>
+                    <div class="grid-header"><span class="channel-icon">📦</span> In-Box</div>
+                    
+                    <div class="day-label">Order Placed</div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"You're back 👊"</div>
+                            <div class="msg-body">Order 2 confirmed. You're officially not a one-timer.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS">
+                        <div class="touchpoint sms">
+                            <div class="msg-body">"Order 2 locked in. You're officially not a one-timer."</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"You're back! 👊"</div>
+                            <div class="msg-body">Order 2 confirmed. 2 more orders to hit the milestone.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Sunday/Monday<div class="day-note">Delivery</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS">
+                        <div class="touchpoint sms">
+                            <div class="msg-body">"Your meals just arrived!"</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Your meals are here! 📦"</div>
+                            <div class="msg-body">Fresh Nutre meals just arrived. Check the reheat guide for best results.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box">
+                        <div class="touchpoint inbox">
+                            <div class="msg-body"><strong>Surprise upgrade</strong> — extra portion or premium protein swap (unannounced)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="day-label">Wednesday 9am</div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Order deadline tonight 🕐"</div>
+                            <div class="msg-body">2 more orders to the milestone. Lock in by midnight.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                </div>
+            </div>
+        </div>
+        
+        
+        <!-- ==================== BUILDING PHASE ==================== -->
+        <div class="phase-section">
+            <div class="phase-header building">
+                <h2>🔨 BUILDING PHASE</h2>
+                <div class="phase-meta">
+                    <span class="phase-orders">Orders 3-4</span>
+                    <span class="phase-goal">Lock in the habit. Get them past the point of no return.</span>
+                </div>
+            </div>
+            
+            <!-- Order 3 -->
+            <div class="week-container">
+                <div class="week-header">
+                    <span class="order-badge">ORDER 3</span>
+                    <span class="week-title">Building Momentum</span>
+                    <span class="week-subtitle">1 away from milestone</span>
+                </div>
+                
+                <div class="week-grid">
+                    <div class="grid-header"></div>
+                    <div class="grid-header"><span class="channel-icon">📧</span> Email</div>
+                    <div class="grid-header"><span class="channel-icon">💬</span> SMS</div>
+                    <div class="grid-header"><span class="channel-icon">📱</span> App Push</div>
+                    <div class="grid-header"><span class="channel-icon">📦</span> In-Box</div>
+                    
+                    <div class="day-label">Order Placed</div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"1 away from Order 4 🔓"</div>
+                            <div class="msg-body">Order 3 confirmed. Next order is the big one.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Sunday/Monday<div class="day-note">Delivery</div></div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"You're building something"</div>
+                            <div class="msg-body">3 orders in. This is when the habit starts to stick. One more to the milestone.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Your meals are here! 📦"</div>
+                            <div class="msg-body">Fresh Nutre meals just arrived.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Wednesday 9am</div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"One order away 🔓"</div>
+                            <div class="msg-body">Order 4 is the big one — that's when the habit sticks. Order by midnight.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                </div>
+            </div>
+            
+            <!-- Order 4 — THE THRESHOLD -->
+            <div class="week-container">
+                <div class="week-header">
+                    <span class="order-badge threshold">ORDER 4 🎯</span>
+                    <span class="week-title">THE STICKY THRESHOLD</span>
+                    <span class="week-subtitle">Customers who hit this stay for years</span>
+                </div>
+                
+                <div class="week-grid">
+                    <div class="grid-header"></div>
+                    <div class="grid-header"><span class="channel-icon">📧</span> Email</div>
+                    <div class="grid-header"><span class="channel-icon">💬</span> SMS</div>
+                    <div class="grid-header"><span class="channel-icon">📱</span> App Push</div>
+                    <div class="grid-header"><span class="channel-icon">📦</span> In-Box</div>
+                    
+                    <div class="day-label">Order Placed</div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS">
+                        <div class="touchpoint sms">
+                            <div class="msg-body">"Order 4 🔓 You made it. Check your delivery for a surprise."</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Order 4 — You made it! 🎉"</div>
+                            <div class="msg-body">This is huge. Customers who hit 4 stay for years. Surprise in your box.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Sunday/Monday<div class="day-note">Delivery — BIG moment</div></div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"You hit Order 4. Here's why it matters."</div>
+                            <div class="msg-body">Customers who reach 4 orders stay with us for 2+ years on average. You're one of us now. 6 more to VIP.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Order 4 delivered + surprise 🎁"</div>
+                            <div class="msg-body">You hit the milestone. 6 more orders to VIP (10% off for life).</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box">
+                        <div class="touchpoint inbox">
+                            <div class="msg-body"><strong>Handwritten note</strong> (real pen): "You're not a customer anymore. You're family."</div>
+                        </div>
+                    </div>
+                    
+                    <div class="day-label">Tuesday<div class="day-note">Referral push</div></div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"Share Nutre with someone who needs it"</div>
+                            <div class="msg-body">You've been with us 4 weeks. Know someone who'd love this? Give $100, Get $100.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"How are your meals? ⭐"</div>
+                            <div class="msg-body">Quick feedback: which meal was your favorite? Tap to rate.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                </div>
+            </div>
+        </div>
+        
+        
+        <!-- ==================== LOYAL PHASE ==================== -->
+        <div class="phase-section">
+            <div class="phase-header loyal">
+                <h2>💚 LOYAL PHASE</h2>
+                <div class="phase-meta">
+                    <span class="phase-orders">Orders 5-9</span>
+                    <span class="phase-goal">Deepen the relationship. Build toward VIP.</span>
+                </div>
+            </div>
+            
+            <!-- Order 5 -->
+            <div class="week-container">
+                <div class="week-header">
+                    <span class="order-badge loyal">ORDER 5</span>
+                    <span class="week-title">Halfway to VIP</span>
+                </div>
+                
+                <div class="week-grid">
+                    <div class="grid-header"></div>
+                    <div class="grid-header"><span class="channel-icon">📧</span> Email</div>
+                    <div class="grid-header"><span class="channel-icon">💬</span> SMS</div>
+                    <div class="grid-header"><span class="channel-icon">📱</span> App Push</div>
+                    <div class="grid-header"><span class="channel-icon">📦</span> In-Box</div>
+                    
+                    <div class="day-label">Sunday/Monday<div class="day-note">Delivery</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"5 orders strong! 💚"</div>
+                            <div class="msg-body">Halfway to VIP. Know someone who needs Nutre? Give $100, Get $100.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Tuesday</div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"Your friends are missing out"</div>
+                            <div class="msg-body">5 weeks of Nutre under your belt. Share the love: Give $100, Get $100.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"How are your meals? ⭐"</div>
+                            <div class="msg-body">Quick feedback: which meal was your favorite?</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                </div>
+            </div>
+            
+            <!-- Order 6 -->
+            <div class="week-container">
+                <div class="week-header">
+                    <span class="order-badge loyal">ORDER 6</span>
+                    <span class="week-title">Surprise & Delight</span>
+                </div>
+                
+                <div class="week-grid">
+                    <div class="grid-header"></div>
+                    <div class="grid-header"><span class="channel-icon">📧</span> Email</div>
+                    <div class="grid-header"><span class="channel-icon">💬</span> SMS</div>
+                    <div class="grid-header"><span class="channel-icon">📱</span> App Push</div>
+                    <div class="grid-header"><span class="channel-icon">📦</span> In-Box</div>
+                    
+                    <div class="day-label">Sunday/Monday<div class="day-note">Delivery</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Check your box 👀"</div>
+                            <div class="msg-body">We snuck something extra in there for you. Hope you like it.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box">
+                        <div class="touchpoint inbox">
+                            <div class="msg-body"><strong>Surprise merch</strong> — hat, stickers, or cooler bag (unannounced)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="day-label">Tuesday</div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"Hope you liked the surprise 👀"</div>
+                            <div class="msg-body">A little something for being with us 6 weeks.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                </div>
+            </div>
+            
+            <!-- Order 7 -->
+            <div class="week-container">
+                <div class="week-header">
+                    <span class="order-badge loyal">ORDER 7</span>
+                    <span class="week-title">Your Stats</span>
+                </div>
+                
+                <div class="week-grid">
+                    <div class="grid-header"></div>
+                    <div class="grid-header"><span class="channel-icon">📧</span> Email</div>
+                    <div class="grid-header"><span class="channel-icon">💬</span> SMS</div>
+                    <div class="grid-header"><span class="channel-icon">📱</span> App Push</div>
+                    <div class="grid-header"><span class="channel-icon">📦</span> In-Box</div>
+                    
+                    <div class="day-label">Sunday/Monday<div class="day-note">Delivery</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Lucky #7! 🍀"</div>
+                            <div class="msg-body">3 more orders to VIP. That's 10% off every order, forever.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Tuesday</div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"Your Nutre Stats"</div>
+                            <div class="msg-body">X meals eaten. X hours saved. X grams of protein. X seed oil meals avoided. (Shareable)</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Your Nutre stats 📊"</div>
+                            <div class="msg-body">Meals eaten, hours saved, protein consumed. Tap to see your full stats.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                </div>
+            </div>
+            
+            <!-- Order 8 -->
+            <div class="week-container">
+                <div class="week-header">
+                    <span class="order-badge loyal">ORDER 8</span>
+                    <span class="week-title">VIP Countdown</span>
+                </div>
+                
+                <div class="week-grid">
+                    <div class="grid-header"></div>
+                    <div class="grid-header"><span class="channel-icon">📧</span> Email</div>
+                    <div class="grid-header"><span class="channel-icon">💬</span> SMS</div>
+                    <div class="grid-header"><span class="channel-icon">📱</span> App Push</div>
+                    <div class="grid-header"><span class="channel-icon">📦</span> In-Box</div>
+                    
+                    <div class="day-label">Sunday/Monday<div class="day-note">Delivery</div></div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"2 orders away from VIP"</div>
+                            <div class="msg-body">Order 10 unlocks 10% off every order, forever. You're almost there.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"2 orders to VIP! 🏆"</div>
+                            <div class="msg-body">10% off for life unlocks at Order 10.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                </div>
+            </div>
+            
+            <!-- Order 9 -->
+            <div class="week-container">
+                <div class="week-header">
+                    <span class="order-badge loyal">ORDER 9</span>
+                    <span class="week-title">One. More. Order.</span>
+                </div>
+                
+                <div class="week-grid">
+                    <div class="grid-header"></div>
+                    <div class="grid-header"><span class="channel-icon">📧</span> Email</div>
+                    <div class="grid-header"><span class="channel-icon">💬</span> SMS</div>
+                    <div class="grid-header"><span class="channel-icon">📱</span> App Push</div>
+                    <div class="grid-header"><span class="channel-icon">📦</span> In-Box</div>
+                    
+                    <div class="day-label">Order Placed</div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS">
+                        <div class="touchpoint sms">
+                            <div class="msg-body">"You're almost there. 👑 One more order to VIP."</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"One. More. Order. 👑"</div>
+                            <div class="msg-body">Order 9 confirmed. Your next order unlocks VIP: 10% off for life.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Wednesday 9am</div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"VIP is one order away 👑"</div>
+                            <div class="msg-body">Your next order unlocks 10% off forever. Order by midnight.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                </div>
+            </div>
+        </div>
+        
+        
+        <!-- ==================== VIP PHASE ==================== -->
+        <div class="phase-section">
+            <div class="phase-header vip">
+                <h2>👑 VIP PHASE</h2>
+                <div class="phase-meta">
+                    <span class="phase-orders">Order 10+</span>
+                    <span class="phase-goal">10% off for life. Make them feel like royalty.</span>
+                </div>
+            </div>
+            
+            <!-- Order 10 -->
+            <div class="week-container">
+                <div class="week-header">
+                    <span class="order-badge vip">ORDER 10 👑</span>
+                    <span class="week-title">VIP UNLOCKED</span>
+                    <span class="week-subtitle">10% off for life</span>
+                </div>
+                
+                <div class="week-grid">
+                    <div class="grid-header"></div>
+                    <div class="grid-header"><span class="channel-icon">📧</span> Email</div>
+                    <div class="grid-header"><span class="channel-icon">💬</span> SMS</div>
+                    <div class="grid-header"><span class="channel-icon">📱</span> App Push</div>
+                    <div class="grid-header"><span class="channel-icon">📦</span> In-Box</div>
+                    
+                    <div class="day-label">Order Placed</div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS">
+                        <div class="touchpoint sms">
+                            <div class="msg-body">"You just became a Nutre VIP 👑 10% off every order, forever."</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"VIP UNLOCKED! 👑"</div>
+                            <div class="msg-body">You're now a Nutre VIP. 10% off every order, forever.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Sunday/Monday<div class="day-note">Delivery — CELEBRATE</div></div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"Welcome to VIP"</div>
+                            <div class="msg-body">10 orders. You're officially a Nutre VIP. Your 10% lifetime discount is now active on all future orders. This is a big deal to us.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Welcome to VIP, officially 👑"</div>
+                            <div class="msg-body">10% off is now active on every future order. Check your box for a gift.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box">
+                        <div class="touchpoint inbox">
+                            <div class="msg-body"><strong>Premium merch</strong> — hoodie, cooler, or kitchen item</div>
+                        </div>
+                        <div class="touchpoint inbox">
+                            <div class="msg-body">Handwritten card from the team</div>
+                        </div>
+                    </div>
+                    
+                    <div class="day-label">Tuesday</div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"VIPs share the wealth 👑"</div>
+                            <div class="msg-body">You're getting 10% off for life. Help a friend start: Give $100, Get $100.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                </div>
+                
+                <div class="unlock-box">
+                    <h4>🔓 UNLOCKED AT ORDER 10 — VIP STATUS</h4>
+                    <div class="unlock-list">
+                        <div class="unlock-item">10% Off Every Order, Forever</div>
+                        <div class="unlock-item">Premium Merch Gift</div>
+                        <div class="unlock-item">VIP Recognition</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+        <!-- ==================== ONGOING MILESTONES ==================== -->
+        <div class="phase-section">
+            <div class="phase-header ongoing">
+                <h2>🔄 ONGOING MILESTONES</h2>
+                <div class="phase-meta">
+                    <span class="phase-orders">Beyond Order 10</span>
+                    <span class="phase-goal">Keep surprising them. They're your best customers.</span>
+                </div>
+            </div>
+            
+            <div class="compact-grid">
+                <div class="compact-card">
+                    <h4>📦 Order 15</h4>
+                    <div class="timing">Sunday Delivery</div>
+                    <div class="touchpoint app">
+                        <div class="msg-title">"15 orders! Top 20% 🌟"</div>
+                        <div class="msg-body">You're in rare company. Thanks for trusting us week after week.</div>
+                    </div>
+                </div>
+                
+                <div class="compact-card">
+                    <h4>📦 Order 20</h4>
+                    <div class="timing">Sunday Delivery</div>
+                    <div class="touchpoint app">
+                        <div class="msg-title">"20 orders! Top 10% 🎊"</div>
+                        <div class="msg-body">Free premium add-on: Code TWENTY</div>
+                    </div>
+                </div>
+                
+                <div class="compact-card">
+                    <h4>📦 Order 25</h4>
+                    <div class="timing">Sunday Delivery</div>
+                    <div class="touchpoint app">
+                        <div class="msg-title">"Quarter Century Club! 🏅"</div>
+                        <div class="msg-body">25 orders. You're a Nutre OG. Free premium meal added to your next order.</div>
+                    </div>
+                </div>
+                
+                <div class="compact-card">
+                    <h4>📦 Order 50</h4>
+                    <div class="timing">Sunday Delivery</div>
+                    <div class="touchpoint app">
+                        <div class="msg-title">"LEGENDARY: 50 Orders 🌟"</div>
+                        <div class="msg-body">First access to every new menu item from now on.</div>
+                    </div>
+                </div>
+                
+                <div class="compact-card">
+                    <h4>📦 Order 100</h4>
+                    <div class="timing">Sunday Delivery</div>
+                    <div class="touchpoint app">
+                        <div class="msg-title">"CENTURION: 100 Orders 🏛️"</div>
+                        <div class="msg-body">Your next week is FREE. Thank you for being a superfan.</div>
+                    </div>
+                </div>
+                
+                <div class="compact-card">
+                    <h4>🎁 Referral Success</h4>
+                    <div class="timing">When someone uses their code</div>
+                    <div class="touchpoint app">
+                        <div class="msg-title">"You just earned $100! 🎉"</div>
+                        <div class="msg-body">[Friend's name] placed their first order. $100 credit added.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+        <!-- ==================== WEEKLY RHYTHM ==================== -->
+        <div class="phase-section">
+            <div class="phase-header" style="background: linear-gradient(135deg, #334155, #475569);">
+                <h2>📅 WEEKLY RHYTHM</h2>
+                <div class="phase-meta">
+                    <span class="phase-orders">Every Week</span>
+                    <span class="phase-goal">Consistent touchpoints that don't depend on order number</span>
+                </div>
+            </div>
+            
+            <div class="week-container" style="margin-top: 20px;">
+                <div class="week-grid">
+                    <div class="grid-header"></div>
+                    <div class="grid-header"><span class="channel-icon">📧</span> Email</div>
+                    <div class="grid-header"><span class="channel-icon">💬</span> SMS</div>
+                    <div class="grid-header"><span class="channel-icon">📱</span> App Push</div>
+                    <div class="grid-header"><span class="channel-icon">📦</span> In-Box</div>
+                    
+                    <div class="day-label">Friday 12pm<div class="day-note">Prep day</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Your meals are being prepped 👨‍🍳"</div>
+                            <div class="msg-body">Fresh ingredients, no seed oils. Your order is coming together now.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Saturday 6pm<div class="day-note">Day before</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS">
+                        <div class="touchpoint sms">
+                            <div class="msg-body">"Your meals are packed and ready. Delivery tomorrow 🚚"</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Delivery tomorrow! 📦"</div>
+                            <div class="msg-body">Make room in the fridge — your Nutre meals arrive in the morning.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Sunday 12pm<div class="day-note">Delivery</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS">
+                        <div class="touchpoint sms">
+                            <div class="msg-body">"Your meals just arrived!"</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Your meals are here! 📦"</div>
+                            <div class="msg-body">Fresh Nutre meals just arrived. Pro tip: check the reheat guide.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Tuesday 6pm<div class="day-note">Feedback</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"How are your meals? ⭐"</div>
+                            <div class="msg-body">Quick feedback: which meal was your favorite this week?</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Wednesday 9am<div class="day-note">Cutoff reminder</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Order deadline tonight 🕐"</div>
+                            <div class="msg-body">Lock in your meals by midnight for Sunday delivery.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Wednesday 8pm<div class="day-note">Final nudge</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"4 hours left ⏰"</div>
+                            <div class="msg-body">Cutoff is midnight. Your favorites are waiting.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                </div>
+            </div>
+        </div>
+        
+        
+        <!-- ==================== WIN-BACK ==================== -->
+        <div class="phase-section">
+            <div class="phase-header winback">
+                <h2>🔙 WIN-BACK SEQUENCES</h2>
+                <div class="phase-meta">
+                    <span class="phase-orders">If They Go Dark</span>
+                    <span class="phase-goal">Soft recovery → modest discount → bigger discount → personal outreach</span>
+                </div>
+            </div>
+            
+            <div class="week-container" style="margin-top: 20px;">
+                <div class="week-grid">
+                    <div class="grid-header"></div>
+                    <div class="grid-header"><span class="channel-icon">📧</span> Email</div>
+                    <div class="grid-header"><span class="channel-icon">💬</span> SMS</div>
+                    <div class="grid-header"><span class="channel-icon">📱</span> App Push</div>
+                    <div class="grid-header"><span class="channel-icon">📦</span> In-Box</div>
+                    
+                    <div class="day-label">Missed This Week<div class="day-note">Thursday 12pm</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"We'll miss you this week"</div>
+                            <div class="msg-body">No worries — life happens. We'll be here when you're ready.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">1 Week Missed<div class="day-note">Wednesday 9am</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"Ready to jump back in?"</div>
+                            <div class="msg-body">Your favorites are on the menu. Order by midnight.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">2 Weeks Missed<div class="day-note">Wednesday 9am</div></div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"It's been a minute 👋"</div>
+                            <div class="msg-body">$15 off to come back: Code MISSYOU. Expires midnight.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS">
+                        <div class="touchpoint sms">
+                            <div class="msg-body">"Haven't seen you in a bit — $15 off this week: MISSYOU"</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"$15 off to come back"</div>
+                            <div class="msg-body">Code MISSYOU. Expires midnight Wednesday.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">3+ Weeks Missed<div class="day-note">Wednesday 9am</div></div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"We want you back"</div>
+                            <div class="msg-body">$25 off your next order: Code COMEBACK. We'll make it worth it.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS">
+                        <div class="touchpoint sms">
+                            <div class="msg-body">"$25 to come back — we miss having you. Code: COMEBACK"</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"$25 off your next order"</div>
+                            <div class="msg-body">Code COMEBACK. We want you back.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">4+ Weeks Missed<div class="day-note">Tuesday 12pm</div></div>
+                    <div class="grid-cell" data-channel="Email">
+                        <div class="touchpoint email">
+                            <div class="msg-title">"Can we ask what happened?"</div>
+                            <div class="msg-body">Reply to this or email us — we'd love to know how we can do better.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">Consider phone call</span></div>
+                    <div class="grid-cell" data-channel="App Push"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                </div>
+            </div>
+        </div>
+        
+        
+        <!-- ==================== SKIP PREVENTION ==================== -->
+        <div class="phase-section">
+            <div class="phase-header" style="background: linear-gradient(135deg, #dc2626, #f59e0b);">
+                <h2>⚠️ SKIP PREVENTION</h2>
+                <div class="phase-meta">
+                    <span class="phase-orders">If No Order Yet This Week</span>
+                    <span class="phase-goal">Escalating urgency without guilt-tripping</span>
+                </div>
+            </div>
+            
+            <div class="week-container" style="margin-top: 20px;">
+                <div class="week-grid">
+                    <div class="grid-header"></div>
+                    <div class="grid-header"><span class="channel-icon">📧</span> Email</div>
+                    <div class="grid-header"><span class="channel-icon">💬</span> SMS</div>
+                    <div class="grid-header"><span class="channel-icon">📱</span> App Push</div>
+                    <div class="grid-header"><span class="channel-icon">📦</span> In-Box</div>
+                    
+                    <div class="day-label">Monday 6pm<div class="day-note">Soft reminder</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"New menu is live 🍽️"</div>
+                            <div class="msg-body">This week's meals are ready. Order by Wednesday midnight.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Wednesday 12pm<div class="day-note">Urgency</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"12 hours left ⏰"</div>
+                            <div class="msg-body">Cutoff is midnight tonight. We saved your favorites — one tap to reorder.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Wednesday 8pm<div class="day-note">High urgency</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"4 hours left 🚨"</div>
+                            <div class="msg-body">Don't miss this week. Quick reorder available now.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                    
+                    <div class="day-label">Wednesday 11pm<div class="day-note">Final</div></div>
+                    <div class="grid-cell" data-channel="Email"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="SMS"><span class="empty-cell">—</span></div>
+                    <div class="grid-cell" data-channel="App Push">
+                        <div class="touchpoint app">
+                            <div class="msg-title">"1 hour left!"</div>
+                            <div class="msg-body">Last chance for Sunday delivery. Tap to order now.</div>
+                        </div>
+                    </div>
+                    <div class="grid-cell" data-channel="In-Box"><span class="empty-cell">—</span></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Edit Controls -->
+    <div class="edit-controls">
+        <button class="edit-btn toggle" id="toggleEdit">Edit Mode</button>
+        <button class="edit-btn save" id="saveBtn" style="display:none;">Save Changes</button>
+        <button class="edit-btn export" id="exportBtn">Export JSON</button>
+        <button class="edit-btn import" id="importBtn">Import JSON</button>
+        <input type="file" id="importInput" accept=".json">
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">Edit Touchpoint</div>
+            <div class="modal-field">
+                <label>Channel</label>
+                <select id="editChannel">
+                    <option value="email">Email</option>
+                    <option value="sms">SMS</option>
+                    <option value="app">App Push</option>
+                    <option value="inbox">In-Box / Physical</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Title (optional)</label>
+                <input type="text" id="editTitle" placeholder="Message title...">
+            </div>
+            <div class="modal-field">
+                <label>Message</label>
+                <textarea id="editBody" placeholder="Message content..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn secondary" id="cancelEdit">Cancel</button>
+                <button class="modal-btn primary" id="saveEdit">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // State management
+        let editMode = false;
+        let currentEditElement = null;
+
+        // Load saved data from localStorage
+        function loadSavedData() {
+            const saved = localStorage.getItem('nutre_journey_data');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    applyData(data);
+                    console.log('Loaded saved changes from localStorage');
+                } catch (e) {
+                    console.error('Error loading saved data:', e);
+                }
+            }
+        }
+
+        // Save current state to localStorage
+        function saveData() {
+            const data = extractData();
+            localStorage.setItem('nutre_journey_data', JSON.stringify(data));
+            showNotification('Changes saved successfully!');
+        }
+
+        // Extract all touchpoint data from DOM
+        function extractData() {
+            const cells = [];
+            document.querySelectorAll('.grid-cell').forEach((cell, idx) => {
+                const touchpoints = [];
+                cell.querySelectorAll('.touchpoint').forEach(tp => {
+                    const channel = tp.classList.contains('email') ? 'email' :
+                                   tp.classList.contains('sms') ? 'sms' :
+                                   tp.classList.contains('app') ? 'app' : 'inbox';
+
+                    const title = tp.querySelector('.msg-title')?.textContent || '';
+                    const bodyEl = tp.querySelector('.msg-body');
+                    let body = '';
+
+                    if (bodyEl) {
+                        body = bodyEl.textContent;
+                    } else {
+                        // Get text without delete button
+                        body = Array.from(tp.childNodes)
+                            .filter(node => node.nodeType === 3)
+                            .map(node => node.textContent)
+                            .join('').trim();
+                    }
+
+                    touchpoints.push({
+                        id: tp.dataset.id,
+                        channel: channel,
+                        title: title,
+                        body: body
+                    });
+                });
+
+                if (touchpoints.length > 0) {
+                    cells.push({
+                        cellIndex: idx,
+                        touchpoints: touchpoints
+                    });
+                }
+            });
+            return { cells };
+        }
+
+        // Apply data to DOM
+        function applyData(data) {
+            // Clear all existing touchpoints and restore from data
+            document.querySelectorAll('.grid-cell').forEach((cell, idx) => {
+                // Find matching cell data
+                const cellData = data.cells.find(c => c.cellIndex === idx);
+
+                if (cellData) {
+                    // Remove all existing touchpoints
+                    cell.querySelectorAll('.touchpoint').forEach(tp => tp.remove());
+
+                    // Remove empty cell indicators
+                    cell.querySelectorAll('.empty-cell').forEach(ec => ec.remove());
+
+                    // Add touchpoints from saved data
+                    cellData.touchpoints.forEach(tpData => {
+                        const touchpoint = document.createElement('div');
+                        touchpoint.className = `touchpoint ${tpData.channel}`;
+                        touchpoint.dataset.id = tpData.id;
+
+                        if (tpData.title) {
+                            const titleEl = document.createElement('div');
+                            titleEl.className = 'msg-title';
+                            titleEl.textContent = tpData.title;
+                            touchpoint.appendChild(titleEl);
+
+                            const bodyEl = document.createElement('div');
+                            bodyEl.className = 'msg-body';
+                            bodyEl.textContent = tpData.body;
+                            touchpoint.appendChild(bodyEl);
+                        } else {
+                            touchpoint.textContent = tpData.body;
+                        }
+
+                        cell.appendChild(touchpoint);
+                    });
+                }
+            });
+        }
+
+        // Generate unique ID
+        function generateId() {
+            return 'tp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Add IDs to all touchpoints
+        function initializeTouchpoints() {
+            document.querySelectorAll('.touchpoint:not([data-id])').forEach(tp => {
+                tp.dataset.id = generateId();
+            });
+        }
+
+        // Toggle edit mode
+        document.getElementById('toggleEdit').addEventListener('click', function() {
+            editMode = !editMode;
+            document.body.classList.toggle('edit-mode', editMode);
+            this.classList.toggle('active', editMode);
+            this.textContent = editMode ? 'View Mode' : 'Edit Mode';
+            document.getElementById('saveBtn').style.display = editMode ? 'block' : 'none';
+
+            if (editMode) {
+                enableEditMode();
+            } else {
+                disableEditMode();
+            }
+        });
+
+        // Enable edit mode
+        function enableEditMode() {
+            // Add click handlers to touchpoints
+            document.querySelectorAll('.touchpoint').forEach(tp => {
+                tp.addEventListener('click', editTouchpoint);
+
+                // Add delete button
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm('Delete this touchpoint?')) {
+                        tp.remove();
+                        saveData();
+                    }
+                });
+                tp.style.position = 'relative';
+                tp.appendChild(deleteBtn);
+            });
+
+            // Add "Add Touchpoint" buttons to empty cells
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                if (!cell.querySelector('.add-touchpoint-btn') &&
+                    !cell.classList.contains('grid-header') &&
+                    !cell.classList.contains('day-label')) {
+                    const addBtn = document.createElement('div');
+                    addBtn.className = 'add-touchpoint-btn';
+                    addBtn.textContent = '+ Add Touchpoint';
+                    addBtn.addEventListener('click', () => addNewTouchpoint(cell));
+                    cell.appendChild(addBtn);
+                }
+            });
+        }
+
+        // Disable edit mode
+        function disableEditMode() {
+            document.querySelectorAll('.touchpoint').forEach(tp => {
+                tp.removeEventListener('click', editTouchpoint);
+                const deleteBtn = tp.querySelector('.delete-btn');
+                if (deleteBtn) deleteBtn.remove();
+            });
+
+            document.querySelectorAll('.add-touchpoint-btn').forEach(btn => btn.remove());
+        }
+
+        // Edit touchpoint
+        function editTouchpoint(e) {
+            if (!editMode) return;
+            e.stopPropagation();
+
+            currentEditElement = this;
+            const channel = this.classList.contains('email') ? 'email' :
+                           this.classList.contains('sms') ? 'sms' :
+                           this.classList.contains('app') ? 'app' : 'inbox';
+
+            const title = this.querySelector('.msg-title')?.textContent || '';
+            const body = this.querySelector('.msg-body')?.textContent || this.textContent.replace('×', '').trim();
+
+            document.getElementById('editChannel').value = channel;
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editBody').value = body;
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        // Add new touchpoint
+        function addNewTouchpoint(cell) {
+            currentEditElement = null;
+            document.getElementById('editChannel').value = 'email';
+            document.getElementById('editTitle').value = '';
+            document.getElementById('editBody').value = '';
+            document.getElementById('editModal').classList.add('active');
+            document.getElementById('editModal').dataset.targetCell =
+                Array.from(document.querySelectorAll('.grid-cell')).indexOf(cell);
+        }
+
+        // Save edit
+        document.getElementById('saveEdit').addEventListener('click', function() {
+            const channel = document.getElementById('editChannel').value;
+            const title = document.getElementById('editTitle').value;
+            const body = document.getElementById('editBody').value;
+
+            if (!body.trim()) {
+                alert('Please enter a message');
+                return;
+            }
+
+            if (currentEditElement) {
+                // Update existing touchpoint
+                currentEditElement.className = `touchpoint ${channel}`;
+
+                const titleEl = currentEditElement.querySelector('.msg-title');
+                const bodyEl = currentEditElement.querySelector('.msg-body');
+
+                if (title) {
+                    if (titleEl) {
+                        titleEl.textContent = title;
+                    } else {
+                        const newTitle = document.createElement('div');
+                        newTitle.className = 'msg-title';
+                        newTitle.textContent = title;
+                        currentEditElement.insertBefore(newTitle, currentEditElement.firstChild);
+                    }
+                } else if (titleEl) {
+                    titleEl.remove();
+                }
+
+                if (bodyEl) {
+                    bodyEl.textContent = body;
+                } else if (title) {
+                    const newBody = document.createElement('div');
+                    newBody.className = 'msg-body';
+                    newBody.textContent = body;
+                    currentEditElement.appendChild(newBody);
+                } else {
+                    currentEditElement.textContent = body;
+                }
+
+                // Re-add delete button in edit mode
+                if (editMode) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.innerHTML = '×';
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (confirm('Delete this touchpoint?')) {
+                            currentEditElement.remove();
+                            saveData();
+                        }
+                    });
+                    currentEditElement.appendChild(deleteBtn);
+                }
+            } else {
+                // Create new touchpoint
+                const cellIndex = parseInt(document.getElementById('editModal').dataset.targetCell);
+                const cell = document.querySelectorAll('.grid-cell')[cellIndex];
+
+                const touchpoint = document.createElement('div');
+                touchpoint.className = `touchpoint ${channel}`;
+                touchpoint.dataset.id = generateId();
+
+                if (title) {
+                    const titleEl = document.createElement('div');
+                    titleEl.className = 'msg-title';
+                    titleEl.textContent = title;
+                    touchpoint.appendChild(titleEl);
+
+                    const bodyEl = document.createElement('div');
+                    bodyEl.className = 'msg-body';
+                    bodyEl.textContent = body;
+                    touchpoint.appendChild(bodyEl);
+                } else {
+                    touchpoint.textContent = body;
+                }
+
+                // Remove empty cell text and add button
+                const emptyCell = cell.querySelector('.empty-cell');
+                if (emptyCell) emptyCell.remove();
+
+                const addBtn = cell.querySelector('.add-touchpoint-btn');
+                if (addBtn) {
+                    cell.insertBefore(touchpoint, addBtn);
+                } else {
+                    cell.appendChild(touchpoint);
+                }
+
+                // Add edit handlers
+                touchpoint.addEventListener('click', editTouchpoint);
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm('Delete this touchpoint?')) {
+                        touchpoint.remove();
+                        saveData();
+                    }
+                });
+                touchpoint.appendChild(deleteBtn);
+            }
+
+            document.getElementById('editModal').classList.remove('active');
+            currentEditElement = null;
+
+            // Auto-save after edit
+            saveData();
+        });
+
+        // Cancel edit
+        document.getElementById('cancelEdit').addEventListener('click', function() {
+            document.getElementById('editModal').classList.remove('active');
+            currentEditElement = null;
+        });
+
+        // Close modal on background click
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+                currentEditElement = null;
+            }
+        });
+
+        // Save button
+        document.getElementById('saveBtn').addEventListener('click', saveData);
+
+        // Export JSON
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            const data = extractData();
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'nutre_journey_' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('Exported successfully!');
+        });
+
+        // Import JSON
+        document.getElementById('importBtn').addEventListener('click', function() {
+            document.getElementById('importInput').click();
+        });
+
+        document.getElementById('importInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    applyData(data);
+                    localStorage.setItem('nutre_journey_data', JSON.stringify(data));
+                    showNotification('Imported successfully!');
+                } catch (err) {
+                    alert('Error importing file: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            this.value = '';
+        });
+
+        // Show notification
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize
+        initializeTouchpoints();
+        loadSavedData();
+    </script>
+</body>
+</html>
