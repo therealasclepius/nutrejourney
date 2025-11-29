@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feast & Fettle Expansion Map - Threat Analysis</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 20px 30px;
+            border-bottom: 3px solid #ff3b3b;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .header .subtitle {
+            font-size: 14px;
+            color: #999;
+            font-weight: 400;
+        }
+        
+        .launch-banner {
+            background: #ff3b3b;
+            padding: 12px 30px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+        }
+        
+        .container {
+            display: flex;
+            height: calc(100vh - 120px);
+        }
+        
+        #map {
+            flex: 1;
+            height: 100%;
+        }
+        
+        .sidebar {
+            width: 320px;
+            background: #1a1a1a;
+            padding: 25px;
+            overflow-y: auto;
+            border-left: 1px solid #333;
+        }
+        
+        .legend {
+            margin-bottom: 30px;
+        }
+        
+        .legend h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        .instruction-box {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+            font-weight: 500;
+            border: 2px solid #60a5fa;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .stats {
+            background: #252525;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .stats h3 {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .stat-label {
+            color: #ccc;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .recommendations {
+            background: #1f2937;
+            border-left: 3px solid #ff3b3b;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .recommendations h4 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #ff3b3b;
+        }
+        
+        .recommendations ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .recommendations li {
+            margin-bottom: 8px;
+            padding-left: 15px;
+            position: relative;
+        }
+        
+        .recommendations li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #ff3b3b;
+        }
+        
+        /* Popup Styles */
+        .leaflet-popup-content-wrapper {
+            background: #1a1a1a;
+            color: #fff;
+            border-radius: 8px;
+        }
+        
+        .leaflet-popup-content {
+            margin: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+            min-width: 300px;
+        }
+        
+        .leaflet-popup-tip {
+            background: #1a1a1a;
+        }
+        
+        .popup-header h4 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .tier-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        
+        .tier-1 { background: #dc2626; color: #fff; }
+        .tier-2 { background: #ea580c; color: #fff; }
+        .tier-3 { background: #facc15; color: #000; }
+        
+        .launch-alert {
+            background: #7f1d1d;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .ad-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+        }
+        
+        .ad-section-title {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        
+        .ad-card {
+            background: #252525;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .ad-headline {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        
+        .ad-copy {
+            font-size: 12px;
+            line-height: 1.5;
+            color: #ccc;
+            margin-bottom: 10px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        
+        .ad-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #3b82f6;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        
+        .btn:hover {
+            background: #2563eb;
+        }
+        
+        .btn-green {
+            background: #10b981;
+        }
+        
+        .btn-green:hover {
+            background: #059669;
+        }
+        
+        .platform-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #1f2937;
+            color: #9ca3af;
+            border-radius: 3px;
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-left: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: 300px;
+                border-left: none;
+                border-top: 1px solid #333;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🗺️ Feast & Fettle Expansion Map</h1>
+        <div class="subtitle">Competitive Intelligence: Geographic Threat Analysis for Nutre Meals</div>
+    </div>
+    
+    <div class="launch-banner">
+        🚨 COORDINATED LAUNCH: JANUARY 3, 2025 (35 days) - 25 Active Ads Running
+    </div>
+    
+    <div class="container">
+        <div id="map"></div>
+        
+        <div class="sidebar">
+            <div class="legend">
+                <h3>Market Threat Levels</h3>
+                <div class="instruction-box">
+                    👆 <strong>Click any colored dot on the map</strong> to view F&F's actual ad copy, headlines, and landing page links for that market.
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #dc2626;"></div>
+                    <div>
+                        <strong>Tier 1: Critical Threat</strong><br>
+                        Maryland/Baltimore Metro
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ea580c;"></div>
+                    <div>
+                        <strong>Tier 2: High Threat</strong><br>
+                        Virginia/DC Suburbs
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #facc15;"></div>
+                    <div>
+                        <strong>Tier 3: Expansion</strong><br>
+                        NYC Metro
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #10b981;"></div>
+                    <div>
+                        <strong>Current Markets</strong><br>
+                        Established presence
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <h3>Campaign Metrics</h3>
+                <div class="stat-row">
+                    <span class="stat-label">Total Markets:</span>
+                    <span class="stat-value">11 locations</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Active Ads:</span>
+                    <span class="stat-value">25 campaigns</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Launch Date:</span>
+                    <span class="stat-value">Jan 3, 2025</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Offer:</span>
+                    <span class="stat-value">2nd week FREE</span>
+                </div>
+            </div>
+            
+            <div class="recommendations">
+                <h4>⚡ Immediate Actions</h4>
+                <ul>
+                    <li>Launch Baltimore counter-campaign NOW</li>
+                    <li>Geo-target Maryland ads (Bethesda, Rockville, Anne Arundel)</li>
+                    <li>Activate Elite Program in DMV region</li>
+                    <li>Match/beat 2nd week free offer</li>
+                    <li>PR push: "Family-owned vs VC-backed"</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        var map = L.map('map').setView([39.0, -76.8], 8);
+        
+        // Dark theme tiles
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        // Territory zones
+        var marylandZone = L.polygon([
+            [38.8, -77.5],
+            [39.4, -77.5],
+            [39.4, -76.0],
+            [38.8, -76.0]
+        ], {
+            color: '#dc2626',
+            fillColor: '#dc2626',
+            fillOpacity: 0.1,
+            weight: 2,
+            dashArray: '5, 10'
+        }).addTo(map);
+        
+        var virginiaZone = L.polygon([
+            [38.6, -77.8],
+            [39.2, -77.8],
+            [39.2, -77.0],
+            [38.6, -77.0]
+        ], {
+            color: '#ea580c',
+            fillColor: '#ea580c',
+            fillOpacity: 0.1,
+            weight: 2,
+            dashArray: '5, 10'
+        }).addTo(map);
+
+        // Market locations with ads
+        var locations = [
+            {
+                name: 'Bethesda',
+                state: 'MD',
+                coords: [38.9807, -77.1006],
+                tier: 1,
+                tierLabel: 'Critical Threat',
+                color: '#dc2626',
+                ads: [{
+                    headline: '👋 Hello, Bethesda',
+                    copy: 'Bethesda, dinnertime\'s about to get an upgrade.\n\nKeep an eye out for our vans as we start delivering fresh, hand-crafted meals on January 3 🗓️\n\n🥬 Thoughtfully sourced ingredients you can trust\n🚐 Delivered by our in-house team, not FedEx or UPS\n🖤 Support from real people who know good service\n\nAt Feast & Fettle, we\'ve built a meal service that puts care first, and we\'re looking forward to serving your neighborhood.\n\nJoin our pre-launch list and get your second week *free* when we launch',
+                    platform: 'IMAGE',
+                    fbLink: 'https://www.facebook.com/ads/library/?id=706959255371000',
+                    landingPage: 'https://learn.feastandfettle.com/maryland-van'
+                }]
+            },
+            {
+                name: 'Rockville',
+                state: 'MD',
+                coords: [39.0840, -77.1528],
+                tier: 1,
+                tierLabel: 'Critical Threat',
+                color: '#dc2626',
+                ads: [{
+                    headline: '👋 Hello, Rockville',
+                    copy: 'Rockville, dinnertime just got an upgrade.\n\nStarting January 3, the Northeast\'s top-rated meal service is bringing fresh, hand-crafted dinners from our kitchen to your doorstep.\n\nDelivered only by our own team, prepared with the kind of care that never asks you to settle.\n\n🎁 Join the waitlist and get your second week of service free when we launch',
+                    platform: 'IMAGE',
+                    fbLink: 'https://www.facebook.com/ads/library/?id=1773874500105081',
+                    landingPage: 'https://learn.feastandfettle.com/maryland-service'
+                }]
+            },
+            {
+                name: 'Pasadena',
+                state: 'MD',
+                coords: [39.1073, -76.5516],
+                tier: 1,
+                tierLabel: 'Critical Threat',
+                color: '#dc2626',
+                ads: [{
+                    headline: '👋 Hello, Pasadena',
+                    copy: 'Pasadena, dinnertime just got an upgrade.\n\nStarting January 3, the Northeast\'s top-rated meal service is bringing fresh, hand-crafted dinners from our kitchen to your doorstep.\n\nDelivered only by our own team, prepared with the kind of care that never asks you to settle.\n\n🎁 Join the waitlist and get your second week of service free when we launch',
+                    platform: 'IMAGE',
+                    fbLink: 'https://www.facebook.com/ads/library/?id=824982476946614',
+                    landingPage: 'https://learn.feastandfettle.com/maryland-service'
+                }]
+            },
+            {
+                name: 'Anne Arundel County',
+                state: 'MD',
+                coords: [39.0458, -76.6413],
+                tier: 1,
+                tierLabel: 'Critical Threat',
+                color: '#dc2626',
+                ads: [
+                    {
+                        headline: '👋 Hello, Anne Arundel County (Variant 1)',
+                        copy: 'Anne Arundel County, dinnertime just got an upgrade.\n\nStarting January 3, the Northeast\'s top-rated meal service is bringing fresh, hand-crafted dinners from our kitchen to your doorstep.\n\nDelivered only by our own team, prepared with the kind of care that never asks you to settle.\n\n🎁 Join the waitlist and get your second week of service free when we launch',
+                        platform: 'IMAGE',
+                        fbLink: 'https://www.facebook.com/ads/library/?id=1368089834824691',
+                        landingPage: 'https://learn.feastandfettle.com/maryland-service'
+                    },
+                    {
+                        headline: '👋 Hello, Anne Arundel County (Variant 2)',
+                        copy: 'Anne Arundel County, dinnertime\'s about to get an upgrade.\n\nKeep an eye out for our vans as we start delivering fresh, hand-crafted meals on January 3 🗓️\n\n🥬 Thoughtfully sourced ingredients you can trust\n🚐 Delivered by our in-house team, not FedEx or UPS\n🖤 Support from real people who know good service',
+                        platform: 'IMAGE',
+                        fbLink: 'https://www.facebook.com/ads/library/?id=1372421684536136',
+                        landingPage: 'https://learn.feastandfettle.com/maryland-van'
+                    }
+                ]
+            },
+            {
+                name: 'Alexandria',
+                state: 'VA',
+                coords: [38.8048, -77.0469],
+                tier: 2,
+                tierLabel: 'High Threat',
+                color: '#ea580c',
+                ads: [{
+                    headline: '👋 Hello, Alexandria',
+                    copy: 'Alexandria, dinnertime just got an upgrade.\n\nStarting January 3, the Northeast\'s top-rated meal service is bringing fresh, hand-crafted dinners from our kitchen to your doorstep.\n\nDelivered only by our own team, prepared with the kind of care that never asks you to settle.\n\n🎁 Join the waitlist and get your second week of service free when we launch',
+                    platform: 'IMAGE',
+                    fbLink: 'https://www.facebook.com/ads/library/?id=692652500334610',
+                    landingPage: 'https://learn.feastandfettle.com/virginia-service'
+                }]
+            },
+            {
+                name: 'Loudoun County',
+                state: 'VA',
+                coords: [39.0438, -77.5647],
+                tier: 2,
+                tierLabel: 'High Threat',
+                color: '#ea580c',
+                ads: [{
+                    headline: '👋 Hello, Loudoun County',
+                    copy: 'Loudoun County, dinnertime just got an upgrade.\n\nStarting January 3, the Northeast\'s top-rated meal service is bringing fresh, hand-crafted dinners from our kitchen to your doorstep.\n\nDelivered only by our own team, prepared with the kind of care that never asks you to settle.\n\n🎁 Join the waitlist and get your second week of service free when we launch',
+                    platform: 'IMAGE',
+                    fbLink: 'https://www.facebook.com/ads/library/?id=821014940724802',
+                    landingPage: 'https://learn.feastandfettle.com/virginia-service'
+                }]
+            },
+            {
+                name: 'Fairfax County',
+                state: 'VA',
+                coords: [38.8462, -77.3064],
+                tier: 2,
+                tierLabel: 'High Threat',
+                color: '#ea580c',
+                ads: [{
+                    headline: '👋 Hello, Fairfax County',
+                    copy: 'Fairfax County, dinnertime\'s about to get an upgrade.\n\nKeep an eye out for our vans as we start delivering fresh, hand-crafted meals on January 3 🗓️\n\n🥬 Thoughtfully sourced ingredients you can trust\n🚐 Delivered by our in-house team, not FedEx or UPS\n🖤 Support from real people who know good service',
+                    platform: 'IMAGE',
+                    fbLink: 'https://www.facebook.com/ads/library/?id=1172763064360104',
+                    landingPage: 'https://learn.feastandfettle.com/maryland-van'
+                }]
+            },
+            {
+                name: 'Herndon',
+                state: 'VA',
+                coords: [38.9696, -77.3861],
+                tier: 2,
+                tierLabel: 'High Threat',
+                color: '#ea580c',
+                ads: [{
+                    headline: '👋 Hello, Herndon',
+                    copy: 'Herndon, dinnertime just got an upgrade.\n\nStarting January 3, the Northeast\'s top-rated meal service is bringing fresh, hand-crafted dinners from our kitchen to your doorstep.\n\nDelivered only by our own team, prepared with the kind of care that never asks you to settle.\n\n🎁 Join the waitlist and get your second week of service free when we launch',
+                    platform: 'IMAGE',
+                    fbLink: 'https://www.facebook.com/ads/library/?id=1886802892241289',
+                    landingPage: 'https://learn.feastandfettle.com/virginia-service'
+                }]
+            },
+            {
+                name: 'Astoria',
+                state: 'NY',
+                coords: [40.7722, -73.9300],
+                tier: 3,
+                tierLabel: 'NYC Expansion',
+                color: '#facc15',
+                ads: [{
+                    headline: '👋 Hello, Astoria',
+                    copy: 'Astoria, dinnertime just got an upgrade.\n\nWe\'re delivering fresh, hand-crafted meals to your neighborhood.\n\n🥬 Thoughtfully sourced ingredients you can trust\n🚐 Delivered by our in-house team, not FedEx or UPS\n🖤 Support from real people who know good service\n\nAt Feast & Fettle, we\'ve built a meal service that puts care first, and we\'re looking forward to serving your neighborhood.',
+                    platform: 'VIDEO',
+                    fbLink: 'https://www.facebook.com/ads/library/?id=819558687569268',
+                    landingPage: null
+                }]
+            },
+            {
+                name: 'Long Island City',
+                state: 'NY',
+                coords: [40.7447, -73.9485],
+                tier: 3,
+                tierLabel: 'NYC Expansion',
+                color: '#facc15',
+                ads: [{
+                    headline: '👋 Hello, Long Island City',
+                    copy: 'Long Island City, dinnertime just got an upgrade.\n\nF&F is bringing fresh, hand-crafted dinners from our kitchen to your doorstep.\n\nDelivered only by our own team, prepared with the kind of care that never asks you to settle. 🖤',
+                    platform: 'IMAGE',
+                    fbLink: 'https://www.facebook.com/ads/library/?id=835584979329494',
+                    landingPage: null
+                }]
+            },
+            {
+                name: 'Pioneer Valley',
+                state: 'MA',
+                coords: [42.3868, -72.5301],
+                tier: 0,
+                tierLabel: 'Current Market',
+                color: '#10b981',
+                ads: [{
+                    headline: '👋 Hello, Pioneer Valley',
+                    copy: 'Pioneer Valley, dinnertime just got an upgrade.\n\nF&F is bringing fresh, hand-crafted dinners from our kitchen to your doorstep.\n\nDelivered only by our own team, prepared with the kind of care that never asks you to settle. 🖤',
+                    platform: 'IMAGE',
+                    fbLink: 'https://www.facebook.com/ads/library/?id=865560999242653',
+                    landingPage: null
+                }]
+            }
+        ];
+
+        // Add markers
+        locations.forEach(function(loc) {
+            var marker = L.circleMarker(loc.coords, {
+                radius: loc.tier === 1 ? 14 : loc.tier === 2 ? 12 : 10,
+                fillColor: loc.color,
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.7
+            }).addTo(map);
+
+            // Build popup HTML
+            var html = '<div class="popup-header">';
+            html += '<h4>' + loc.name + ', ' + loc.state + '</h4>';
+            html += '<div class="tier-badge tier-' + loc.tier + '">' + loc.tierLabel.toUpperCase() + '</div>';
+            if (loc.tier > 0) {
+                html += '<div class="launch-alert">🚨 Launch: January 3, 2025</div>';
+            }
+            html += '</div>';
+            
+            if (loc.ads && loc.ads.length > 0) {
+                html += '<div class="ad-section">';
+                html += '<div class="ad-section-title">📢 Active Ads (' + loc.ads.length + ')</div>';
+                
+                loc.ads.forEach(function(ad) {
+                    html += '<div class="ad-card">';
+                    html += '<div class="ad-headline">' + ad.headline;
+                    html += '<span class="platform-tag">' + ad.platform + '</span></div>';
+                    html += '<div class="ad-copy">' + ad.copy + '</div>';
+                    html += '<div class="ad-buttons">';
+                    html += '<a href="' + ad.fbLink + '" target="_blank" class="btn">View Ad on FB</a>';
+                    if (ad.landingPage) {
+                        html += '<a href="' + ad.landingPage + '" target="_blank" class="btn btn-green">Landing Page</a>';
+                    }
+                    html += '</div></div>';
+                });
+                
+                html += '</div>';
+            }
+
+            marker.bindPopup(html, {
+                maxWidth: 450,
+                minWidth: 320
+            });
+        });
+
+        // Scale control
+        L.control.scale({
+            position: 'bottomleft',
+            imperial: true,
+            metric: false
+        }).addTo(map);
+    </script>
+</body>
+</html>
